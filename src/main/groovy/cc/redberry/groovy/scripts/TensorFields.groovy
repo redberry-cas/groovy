@@ -25,6 +25,10 @@ import cc.redberry.core.transformations.ContractIndices
 
 import static cc.redberry.core.tensor.Tensors.parse
 import static cc.redberry.core.transformations.Expand.expand
+import cc.redberry.core.transformations.Transformation
+import cc.redberry.groovy.RedberryGroovy
+
+RedberryGroovy.withRedberry()
 
 def field = parse("F_{ij}[p_a, q_b] = "
         + "g_{ij}*p_a*q^a - (p_i*q_j + p_j*q_i)");
@@ -33,7 +37,7 @@ def field = parse("F_{ij}[p_a, q_b] = "
 def e = parse("E = F_ab[k^n - p^n, q_n] * F^ab[q_n, k_n]");
 
 //substituting field value in expression
-e = field.transform(e);
+e = field >> e;
 //expand and contract indices
 e = expand(e,
         //contract indices while expand

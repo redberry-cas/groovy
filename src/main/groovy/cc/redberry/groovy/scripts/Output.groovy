@@ -21,27 +21,30 @@
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import static cc.redberry.core.context.CC.setDefaultToStringFormat
-import static cc.redberry.core.context.ToStringMode.*
 import static cc.redberry.core.tensor.Tensors.parse
+import cc.redberry.core.context.CC
 
-//you can specify the default string format of expressions
-setDefaultToStringFormat(Redberry)
+import static cc.redberry.core.context.CC.setDefaultOutputFormat
+import cc.redberry.core.context.OutputFormat
 
+import static cc.redberry.core.context.OutputFormat.Redberry
+
+//you can specify the default output format
+setDefaultOutputFormat(Redberry)
 def t = parse("F_mn^{\\alpha\\beta}/(a+b)")
 
 //default print format gives
-//(b+a)**(-1)*F_{mn}^{\alpha \beta }
+//(b+a)**(-1)*F_{mn}^{\alpha\beta}
 println t
 
 //LaTeX format gives
-//\frac{(b+a)}{-1}*F_{mn}{}^{\alpha \beta }
+//\frac{1}{(a+b)} F_{mn}{}^{\alpha\beta}
 println t.toString(LaTeX)
 
-//using UTF8 format will print greek characters
-//(b+a)**(-1)*F_{mn}^{αβ}
+//UTF8 format will print greek characters
+//(a+b)**(-1)*F_{mn}^{αβ}
 println t.toString(UTF8)
 
 //WolframMathematica format 
-//Power[(b+a), (-1)]*F_{mn}^{\alpha \beta }
+//Power[b+a, -1]*F_{mn}^{\alpha\beta}
 println t.toString(WolframMathematica)

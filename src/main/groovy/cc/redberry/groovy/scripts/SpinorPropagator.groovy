@@ -39,8 +39,6 @@ def eq = parse("K^i_j * D^j_k = d^i_k")
 def samples = [
         parse("d^i_j"),
         parse("p_\\mu*G^{\\mu i}_j")]
-def tr = [
-        parse("p_\\mu*p_\\nu*G^{\\mu i}_j*G^{\\nu j}_k = p_\\mu*p^\\mu*d^i_k")
-]
+def tr = [parse("p_\\mu*p_\\nu*G^{\\mu i}_j*G^{\\nu j}_k = p_\\mu*p^\\mu*d^i_k")]
 r = findInverseWithMaple(t, eq, samples as Tensor[], false, tr as Transformation[], mapleBinDir, temporaryDir)
 println r
