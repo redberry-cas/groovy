@@ -21,13 +21,12 @@
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import static cc.redberry.core.tensor.Tensors.parse
-import cc.redberry.core.context.CC
+import sun.reflect.UTF8
 
 import static cc.redberry.core.context.CC.setDefaultOutputFormat
-import cc.redberry.core.context.OutputFormat
-
 import static cc.redberry.core.context.OutputFormat.Redberry
+import static cc.redberry.core.context.OutputFormat.WolframMathematica
+import static cc.redberry.core.tensor.Tensors.parse
 
 //you can specify the default output format
 setDefaultOutputFormat(Redberry)
