@@ -24,8 +24,8 @@
 import cc.redberry.core.transformations.ContractIndices
 
 import static cc.redberry.core.tensor.Tensors.parse
-import static cc.redberry.core.transformations.Expand.expand
-import cc.redberry.core.transformations.Transformation
+import static cc.redberry.core.transformations.expand.Expand.expand
+
 import cc.redberry.groovy.RedberryGroovy
 
 RedberryGroovy.withRedberry()

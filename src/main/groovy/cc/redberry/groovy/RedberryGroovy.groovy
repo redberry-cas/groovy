@@ -35,6 +35,7 @@ import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.substitutions.Substitution
 import cc.redberry.core.utils.ArrayIterator
 import cc.redberry.core.utils.IntArray
+import cc.redberry.core.utils.TensorUtils
 
 import static cc.redberry.core.tensor.Tensors.*
 
@@ -43,6 +44,13 @@ import static cc.redberry.core.tensor.Tensors.*
  * @author Stanislav Poslavsky
  */
 class RedberryGroovy {
+    public static boolean isCollectionOfType(collection, Class type) {
+        for (t in collection)
+            if (!type.isAssignableFrom(t.class))
+                return false;
+        return true;
+    }
+
     public static void withRedberry() {
 
         String.metaClass.asType {
@@ -97,28 +105,78 @@ class RedberryGroovy {
                 throw new UnsupportedOperationException()
         }
 
+        Transformation[].metaClass.rightShift {
+            if (isCollectionOfType(delegate, Expression))
+                return new Substitution((delegate as Expression[])) >> it
+            else if (isCollectionOfType(delegate, Transformation)) {
+                for (Transformation tr : delegate)
+                    it = tr.transform(it)
+                return it
+            }
+            else
+                return delegate.rightShift(it)
+        }
+
         Transformation.metaClass.leftShift {
             it.transform(delegate)
         }
 
         Collection.metaClass.rightShift {
-            if (delegate instanceof Collection<Expression>)
+            if (isCollectionOfType(delegate, Expression))
                 return new Substitution((delegate as Expression[])) >> it
+            else if (isCollectionOfType(delegate, Transformation)) {
+                for (Transformation tr : delegate)
+                    it = tr.transform(it)
+                return it
+            }
             else
                 return delegate.rightShift(it)
         }
 
+        Tensor.metaClass.getAt {
+            b ->
+            if (b instanceof IntRange)
+                return delegate.getRange(b.from, b.to)
+            if (b instanceof Collection)
+                if (b.size() == 1)
+                    return delegate.get(b[0])
+                else
+                    return delegate.get(b[0]).getAt(b[1..b.size() - 1])
+            if (b instanceof Integer)
+                return delegate.get(b)
+        }
+
+//        Tensor.metaClass.putAt {
+//            int position, Tensor tensor ->
+//            if (tensor instanceof Number) {
+//                tensor = new Complex(tensor);
+//            }
+//            return delegate.set(position, tensor)
+//        }
+
         Tensor.metaClass.multiply {
             b ->
-            if (b instanceof Integer)
+            if (b instanceof Number)
                 return multiply(b, new Complex(b))
             else
-                return multiply(delegate, b)
+                return multiplyAndRenameConflictingDummies(delegate, b)
+        }
+        Tensor.metaClass.div {
+            b -> multiplyAndRenameConflictingDummies(delegate, reciprocal(b))
+        }
+
+        Tensor.metaClass.negative {
+            return negate(delegate)
         }
 
         Tensor.metaClass.xor {
-            int b -> pow(delegate, b)
+            b -> pow(delegate, b)
         }
+
+        Tensor.metaClass.power {
+            b -> pow(delegate, b)
+        }
+
 
         Tensor.metaClass.minus {
             b -> sum(delegate, negate(b))
@@ -128,12 +186,32 @@ class RedberryGroovy {
             b -> sum(delegate, b)
         }
 
+        Tensor.metaClass.asType() {
+            Class b ->
+            if (b == Tensor[])
+                return delegate.toArray()
+        }
+
         Integer.metaClass.multiply {
             b ->
             if (b instanceof Tensor)
                 return multiply(new Complex(delegate), b)
             else
                 return delegate.multiply(b)
+        }
+
+        Tensor.metaClass.equals {
+            other ->
+            if (other instanceof Number)
+                other = new Complex(other)
+            return TensorUtils.equals(delegate, other)
+        }
+
+        Tensor.metaClass.compareTo {
+            other ->
+            if (other instanceof Number)
+                other = new Complex(other)
+            return TensorUtils.compare1(delegate, other)
         }
 
         IntArray.metaClass.getAt {
@@ -152,6 +230,14 @@ class RedberryGroovy {
                 return IndicesFactory.createSorted(delegate.copy())
             return delegate.asType(type)
         }
+    }
+
+    public static void timing(Closure closure) {
+//        withRedberry();
+        long start = System.currentTimeMillis();
+        closure.call();
+        long stop = System.currentTimeMillis();
+        println('Time: ' + (stop - start) + ' ms.')
     }
 }
 

@@ -43,5 +43,5 @@ def calcLines(File file) {
     }
 }
 
-calcLines(new File("/home/stas/Projects/redberry/redberry/src/"))
+calcLines(new File("/home/stas/Projects/redberry/redberry/"))
 println counter

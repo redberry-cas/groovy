@@ -26,12 +26,11 @@ package cc.redberry.groovy.scripts
 import cc.redberry.core.transformations.Transformation
 
 import static cc.redberry.core.tensor.Tensors.parse
-import cc.redberry.core.transformations.Expand
+import cc.redberry.core.transformations.expand.Expand
 
-import static cc.redberry.core.transformations.Expand.expand
-import cc.redberry.core.transformations.Together
+import static Expand.expand
 
-import static cc.redberry.core.transformations.Together.together
+import static cc.redberry.core.transformations.fractions.Together.together
 import cc.redberry.core.transformations.ContractIndices
 
 /**

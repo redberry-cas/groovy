@@ -23,8 +23,8 @@
 
 import static cc.redberry.core.tensor.Tensors.parse
 import static cc.redberry.core.transformations.ContractIndices.contract
-import static cc.redberry.core.transformations.Expand.expand
-import static cc.redberry.core.transformations.Together.together
+import static cc.redberry.core.transformations.expand.Expand.expand
+import static cc.redberry.core.transformations.fractions.Together.together
 
 //all equal terms are collected by default
 def t = parse("a*F_ik*F^k_p+b*F_iz*F^z_p")

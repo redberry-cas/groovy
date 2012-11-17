@@ -27,9 +27,8 @@ import cc.redberry.groovy.RedberryGroovy
 
 import static cc.redberry.core.indices.IndexType.LatinLower
 import static cc.redberry.core.tensor.Tensors.*
-import static cc.redberry.core.transformations.Expand.expand
+import static cc.redberry.core.transformations.expand.Expand.expand
 import static cc.redberry.core.utils.TensorUtils.isZero
-import cc.redberry.core.context.OutputFormat
 
 /**
  * @author Dmitry Bolotin

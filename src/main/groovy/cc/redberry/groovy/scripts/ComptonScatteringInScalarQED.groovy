@@ -25,63 +25,79 @@ package cc.redberry.groovy.scripts
 
 import cc.redberry.core.number.Complex
 import cc.redberry.core.tensor.SimpleTensor
+import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.utils.TensorUtils
 import cc.redberry.groovy.RedberryGroovy
+import cc.redberry.physics.feyncalc.FeynCalcUtils
 
 import static cc.redberry.core.context.OutputFormat.WolframMathematica
-import static cc.redberry.core.tensor.Tensors.*
+import static cc.redberry.core.tensor.Tensors.parse
 import static cc.redberry.core.transformations.ContractIndices.ContractIndices
-import static cc.redberry.core.transformations.Expand.expand
-import static cc.redberry.core.transformations.Together.together
+import static cc.redberry.core.transformations.expand.ExpandAll.expandAll
+import static cc.redberry.core.transformations.expand.ExpandNumerator.EXPAND_NUMERATOR
+import cc.redberry.core.transformations.fractions.Together
+
+import static cc.redberry.core.transformations.fractions.Together.INSTANCE
 
 RedberryGroovy.withRedberry()
 
+//def setMandelstam = {
+//    List list ->
+//    assert list.size() == 4
+//    list.each { e ->
+//        assert e instanceof List
+//        assert e.size() == 2
+//    }
+//
+//    //parsing strings if they are not already parsed
+//    list = list.collect {
+//        [it[0] instanceof String ? parse(it[0]) : it[0],
+//                it[1] instanceof String ? parse(it[1]) : it[1]]
+//    }
+//    list.each { e -> e.each { ee -> assert ee instanceof SimpleTensor || Complex } }
+//
+//    def contract = {
+//        SimpleTensor a, SimpleTensor b ->
+//        a * simpleTensor(b.name, a.indices.inverse)
+//    }
+//    def square = {
+//        SimpleTensor tensor ->
+//        tensor * simpleTensor(tensor.name, tensor.indices.inverse)
+//    }
+//
+//    def s = parse('s'), t = parse('t'), u = parse('u')
+//
+//    def result = []
+//    // (k1,k1) = m1^2, (k2,k2) = m2^2, (k3,k3) = m3^2, (k4,k4) = m4^2
+//    list.each { e -> result << expression(square(e[0]), e[1] ^ 2)}
+//
+//    //2(k1, k2) = s - k1^2 - k2^2
+//    //2(k3, k4) = s - k3^2 - k4^2
+//    for (i in [[0, 1], [2, 3]])
+//        result << expression(2 * contract(list[i[0]][0], list[i[1]][0]),
+//                s - (list[i[0]][1] ^ 2) - (list[i[1]][1] ^ 2))
+//    //-2(k1, k3) = t - k1^2 - k3^2
+//    //-2(k2, k4) = t - k2^2 - k4^2
+//    for (i in [[0, 2], [1, 3]])
+//        result << expression(-2 * contract(list[i[0]][0], list[i[1]][0]),
+//                t - (list[i[0]][1] ^ 2) - (list[i[1]][1] ^ 2))
+//    //-2(k1, k4) = u - k1^2 - k4^2
+//    //-2(k2, k3) = u - k2^2 - k3^2
+//    for (i in [[0, 3], [1, 2]])
+//        result << expression(-2 * contract(list[i[0]][0], list[i[1]][0]),
+//                u - (list[i[0]][1] ^ 2) - (list[i[1]][1] ^ 2))
+//    result
+//}
+
 def setMandelstam = {
     List list ->
-    assert list.size() == 4
-    list.each { e ->
-        assert e instanceof List
-        assert e.size() == 2
-    }
-
     //parsing strings if they are not already parsed
     list = list.collect {
         [it[0] instanceof String ? parse(it[0]) : it[0],
                 it[1] instanceof String ? parse(it[1]) : it[1]]
     }
     list.each { e -> e.each { ee -> assert ee instanceof SimpleTensor || Complex } }
-
-    def contract = {
-        SimpleTensor a, SimpleTensor b ->
-        a * simpleTensor(b.name, a.indices.inverse)
-    }
-    def square = {
-        SimpleTensor tensor ->
-        tensor * simpleTensor(tensor.name, tensor.indices.inverse)
-    }
-
-    def s = parse('s'), t = parse('t'), u = parse('u')
-
-    def result = []
-    // (k1,k1) = m1^2, (k2,k2) = m2^2, (k3,k3) = m3^2, (k4,k4) = m4^2
-    list.each { e -> result << expression(square(e[0]), e[1] ^ 2)}
-
-    //2(k1, k2) = s - k1^2 - k2^2
-    //2(k3, k4) = s - k3^2 - k4^2
-    for (i in [[0, 1], [2, 3]])
-        result << expression(2 * contract(list[i[0]][0], list[i[1]][0]),
-                s - (list[i[0]][1] ^ 2) - (list[i[1]][1] ^ 2))
-    //-2(k1, k3) = t - k1^2 - k3^2
-    //-2(k2, k4) = t - k2^2 - k4^2
-    for (i in [[0, 2], [1, 3]])
-        result << expression(-2 * contract(list[i[0]][0], list[i[1]][0]),
-                t - (list[i[0]][1] ^ 2) - (list[i[1]][1] ^ 2))
-    //-2(k1, k4) = u - k1^2 - k4^2
-    //-2(k2, k3) = u - k2^2 - k3^2
-    for (i in [[0, 3], [1, 2]])
-        result << expression(-2 * contract(list[i[0]][0], list[i[1]][0]),
-                u - (list[i[0]][1] ^ 2) - (list[i[1]][1] ^ 2))
-    result
+    FeynCalcUtils.setMandelstam(list as Tensor[][]) as List
 }
 
 //************************************************//
@@ -107,7 +123,7 @@ M = [V1, V2, P] >> M
 def M2 = M >> parse("M2 = -M_ij*M^ij")
 
 //expand squared matrix element and contract indices
-M2 = expand(M2, ContractIndices)
+M2 = expandAll(M2, ContractIndices)
 M2 = parse("d_i^i = 4") >> M2
 
 //defining mass shell and Mandelstam variables
@@ -131,8 +147,8 @@ M2 = mandelstam >> M2
 M2 = parse("u=2*m**2-s-t") >> M2
 
 //to common denominator
-M2 = expand(together(M2))
-M2 = together(M2)
+M2 = [INSTANCE, EXPAND_NUMERATOR] >> M2
+println M2
 
 println M2.toString(WolframMathematica)
 

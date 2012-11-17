@@ -31,8 +31,6 @@ Transformation.metaClass.rightShift {
 import cc.redberry.core.transformations.Transformation
 
 import static cc.redberry.core.tensor.Tensors.parse
-import static cc.redberry.core.transformations.ContractIndices.ContractIndices
-import static cc.redberry.core.transformations.Expand.expand
 
 def X = parse("f[x] = 2*x**4-3")
 

@@ -30,7 +30,7 @@ import static cc.redberry.core.indices.IndexType.LatinLower
 import static cc.redberry.core.tensor.Split.splitIndexless
 import static cc.redberry.core.tensor.Tensors.addSymmetry
 import static cc.redberry.core.tensor.Tensors.parse
-import static cc.redberry.core.transformations.Expand.expand
+import static cc.redberry.core.transformations.expand.Expand.expand
 
 /**
  * @author Dmitry Bolotin
