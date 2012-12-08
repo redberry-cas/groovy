@@ -1,4 +1,26 @@
-package cc.redberry.groovy.scripts.chi
+/*
+ * Redberry: symbolic tensor computations.
+ *
+ * Copyright (c) 2010-2012:
+ *   Stanislav Poslavsky   <stvlpos@mail.ru>
+ *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+ *
+ * This file is part of Redberry.
+ *
+ * Redberry is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Redberry is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 
 import cc.redberry.core.context.CC
 import cc.redberry.core.context.OutputFormat
@@ -19,6 +41,7 @@ import static cc.redberry.core.tensor.Tensors.*
 import static cc.redberry.core.transformations.ContractIndices.ContractIndices
 import static cc.redberry.core.transformations.Differentiate.differentiate
 import static cc.redberry.core.transformations.expand.ExpandAll.expandAll
+//import cc.redberry.core.transformations.factor.Factor
 //import cc.redberry.core.transformations.factor.Factor
 
 /**
@@ -54,8 +77,7 @@ def tr
 def D = parse('D[p_m] = (m + p_m*G^m)/(p_m*p^m - m**2)')
 //sum over gluon polarizations
 addSymmetry('P_mn[k_a]', 1, 0)
-def gluonPolarization = parse('P_mn[k_a] = -g_mn + 1/(k_a*n^a)*(k_m*n_n + k_n*n_m) + 1/(k_a*n^a)**2 * k_m*k_n')
-def n2 = parse('n_a*n^a = 1')
+def gluonPolarization = parse('P_mn[k_a] = -g_mn ')
 
 def simplifyLeviCivita = new LeviCivitaSimplify(parse('e_abcd'))
 
@@ -63,12 +85,24 @@ def simplifyLeviCivita = new LeviCivitaSimplify(parse('e_abcd'))
 def G = parse('G_mn[k_a] = P_mn[k_a]/(k_a*k^a)')
 G = gluonPolarization >> G
 
-//Clebsch–Gordan coefficient
-def J = parse('J_ab = P_a*P_b/(2*m)**2 - g_ab')
+
+def n2 = parse('n_a*n^a = 0')
+def J = parse('J_ab = - g_ab + P_a*P_b/(2*m)**2 ')
 addSymmetry('J_ab', 1, 0)
+def JT = [parse('S_m = k1_m+k2_m'),
+        parse('a = -1/2'),
+        parse('b = (4*m**2 + s)/(s-4*m**2)**2'),
+        parse('c = -2*s/(s-4*m**2)**2'),
+        parse('d = -8*m**2/(s-4*m**2)**2')] >> parse('JT_mn = a*g_mn + b*(P_m*S_n + P_n*S_m) + c*P_m*P_n + d*S_m*S_n')
+
+addSymmetry('JT_mn', 1, 0)
+def JL = [J, JT] >> parse('JL_ab = J_ab - JT_ab')
+addSymmetry('JL_mn', 1, 0)
+
+def polarizations = [J, JT, JL]
 
 //effective vertex
-def A = parse('''A_{mn a}[k1_m, k2_m] = (1/2)*Tr[
+def A = parse('''A_{mn a}[k1_m, k2_n] = (1/2)*Tr[
                   (G_m*D[p1_m-k1_m]*G_n + G_n*D[p1_m-k2_m]*G_m)
                   *(p2_m*G^m - m)*G_a*(G_m*P^m + 2*m)*(p1_m*G^m + m)] ''')
 
@@ -81,58 +115,53 @@ A1 = parse('q_a = 0') >> A1
 tr = [ContractIndices, parse('d^a_a = 4'), parse('P_m*P^m = 4*m**2')]
 A1 = tr >> expandAll(A1, tr as Transformation[])
 
-def Aj0 = expression(parse('A_{mnd}[k1_m, k2_m]'), A1)
+def Aj0 = expression(parse('A_{mn d}[k1_m, k2_m]'), A1)
 
-assert (expandAll(Aj0 >> parse('A_{mnd}[k1_m, k2_m] - A_{nmd}[k2_m, k1_m]'))) == parse('0')
-
-def temp = parse('P_m = k1_m + k2_m') >> (Aj0 >> parse('k1^m*A_{mnd}[k1_m, k2_m]'))
-tr = [ContractIndices, parse('k1_m*k1^m = 0'), parse('k2_m*k2^m = 0'), parse('k1_m*k2^m = 2*m**2'), parse('d^a_a = 4'), parse(''' d^A'_A' = N '''), parse(''' d^a'_a' = 4 ''')]
-temp = expandAll(temp, tr as Transformation[])
-temp = tr >> temp
-temp = simplifyLeviCivita >> temp
-assert expandAll(temp) == parse('0')
 
 def mandelstam = setMandelstam([['k1_m', '0'], ['k2_m', '0'], ['k3_m', '0'], ['P_m', '2*m']])
 tr = [ContractIndices];
 tr.add(simplifyLeviCivita)
 tr.addAll(mandelstam)
 tr.add(parse('d^a_a = 4'))
-tr.addAll([n2, parse('k1_a*n^a = kn1'), parse('k2_a*n^a = kn2'), parse('k3_a*n^a = kn3')])
-//tr.add(parse('k2_m*P^mn[k2_m] = 0'))
+tr.add(n2)
 tr.add(parse('u = 4*m**2 -s - t'))
-
-
-def M = parse('M_pxA = T_A*G_m*G^mn[k1_m-k3_m]*A_{npx}[k1_m-k3_m, k2_m]')
+def M = parse('M_pxA = T_A*G_m*G^mn[k1_m+k2_m]*A_{npx}[k1_m + k2_m, -k3_m]')
 M = G >> M
 M = Aj0 >> M
 M = tr >> expandAll(M, tr as Transformation[])
 M = expandAll(M)
 
-println 'zzz'
-def M2 = M >> parse('M2 = Tr[k3_m*G^m*M_pxA*k1_n*G^n*M_qy^A*P^pq[k2_m]]*J^xy')
+// |h| = 0 - transverse polarization
+def M2_Sum = M >> parse('M2Sum = Tr[k2_m*G^m*M_pxA*k1_n*G^n*M_qy^A*P^pq[k3_m]]*J^xy')
+// |h| = 0 - transverse polarization
+def M2_0 =   M >> parse('M2L   = Tr[k2_m*G^m*M_pxA*k1_n*G^n*M_qy^A*P^pq[k3_m]]*JT^xy')
+// |h| = 1 - longitudial polarization
+def M2_1 =   M >> parse('M2T   = Tr[k2_m*G^m*M_pxA*k1_n*G^n*M_qy^A*P^pq[k3_m]]*JL^xy')
 
-println M2
-M2 = expandAll(M2)
-M2 = parse('Tr[T_A*T^A] = N/2') >> M2
-M2 = DiracTrace.trace(M2)
-println 'ddd'
-tr.add(parse('P_a*J^ab = 0'))
-M2 = tr >> expandAll(M2, tr as Transformation[])
-M2 = J >> M2
-M2 = gluonPolarization >> M2
-M2 = tr >> expandAll(M2, tr as Transformation[])
+def M2_All = [M2_Sum, M2_0, M2_1]
+for (M2 in M2_All) {
 
-//println M2
+    M2 = gluonPolarization >> M2
+    M2 = expandAll(M2)
+    M2 = parse('Tr[T_A*T^A] = 3/2') >> M2
+    M2 = DiracTrace.trace(M2)
+    tr.add(parse('P_a*J^ab = 0'))
+    tr.add(parse('P_a*JT^ab = 0'))
+    tr.add(parse('P_a*JL^ab = 0'))
+    def nSub = parse("u = 4*m**2 - s - t") >> [
+            parse('k1_m*n^m = s**(1/2)*t/(4*m**2 - s)'),
+            parse('k2_m*n^m = s**(1/2)*u/(4*m**2 - s)'),
+            parse('k3_m*n^m = (s-4*m**2)/s**(1/2)'),
+            parse('P_m*n^m = 4*m**2/s**(1/2)')]
+    tr.addAll(nSub)
+    M2 = tr >> expandAll(M2, tr as Transformation[])
 
-println 'zzz'
-M2 = parse('P_m*n^m = kn1 + kn2 - kn3') >> M2
-//M2 = tr >> expandAll(M2, tr as Transformation[])
-println 'xxx1'
-//M2 = expandAll(M2)
-println 'xxx2'
-println TensorUtils.isSymbolic(M2)
-println Factor.factor(M2)
-new File('/home/stas/Projects/redberry/temp1').delete()
-new File('/home/stas/Projects/redberry/temp1') << M2[1].toString(OutputFormat.WolframMathematica)
-//M2 = Together.together(M2);
-//new File('/home/stas/Projects/redberry/temp1together') << M2[1].toString(OutputFormat.WolframMathematica)
+
+    M2 = polarizations >> M2
+    M2 = tr >> expandAll(M2, tr as Transformation[])
+
+    println TensorUtils.isSymbolic(M2)
+//    println Factor.factor(M2).toString(OutputFormat.WolframMathematica)
+    new File('/home/stas/Projects/redberry/' + M2[0]).delete()
+    new File('/home/stas/Projects/redberry/' + M2[0]) << M2[1].toString(OutputFormat.WolframMathematica)
+}

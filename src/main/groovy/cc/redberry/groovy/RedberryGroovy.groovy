@@ -44,6 +44,7 @@ import static cc.redberry.core.tensor.Tensors.*
  * @author Stanislav Poslavsky
  */
 class RedberryGroovy {
+
     public static boolean isCollectionOfType(collection, Class type) {
         for (t in collection)
             if (!type.isAssignableFrom(t.class))
@@ -232,12 +233,5 @@ class RedberryGroovy {
         }
     }
 
-    public static void timing(Closure closure) {
-//        withRedberry();
-        long start = System.currentTimeMillis();
-        closure.call();
-        long stop = System.currentTimeMillis();
-        println('Time: ' + (stop - start) + ' ms.')
-    }
 }
 

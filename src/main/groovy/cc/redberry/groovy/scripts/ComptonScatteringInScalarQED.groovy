@@ -35,9 +35,8 @@ import static cc.redberry.core.tensor.Tensors.parse
 import static cc.redberry.core.transformations.ContractIndices.ContractIndices
 import static cc.redberry.core.transformations.expand.ExpandAll.expandAll
 import static cc.redberry.core.transformations.expand.ExpandNumerator.EXPAND_NUMERATOR
-import cc.redberry.core.transformations.fractions.Together
 
-import static cc.redberry.core.transformations.fractions.Together.INSTANCE
+import static cc.redberry.core.transformations.fractions.Together.TOGETHER
 
 RedberryGroovy.withRedberry()
 
@@ -147,7 +146,7 @@ M2 = mandelstam >> M2
 M2 = parse("u=2*m**2-s-t") >> M2
 
 //to common denominator
-M2 = [INSTANCE, EXPAND_NUMERATOR] >> M2
+M2 = [TOGETHER, EXPAND_NUMERATOR] >> M2
 println M2
 
 println M2.toString(WolframMathematica)

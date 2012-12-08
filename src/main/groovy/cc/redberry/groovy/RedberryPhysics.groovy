@@ -9,7 +9,7 @@
  *
  * Redberry is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
  * Redberry is distributed in the hope that it will be useful,
@@ -21,30 +21,26 @@
  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package cc.redberry.groovy.scripts
+package cc.redberry.groovy
+
+import cc.redberry.core.tensor.Tensor
+import cc.redberry.core.transformations.Transformation
+import cc.redberry.physics.feyncalc.FeynCalcUtils
+
+import static cc.redberry.core.tensor.Tensors.parse
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-counter = 0;
+class RedberryPhysics {
 
-def calcLines(File file) {
-    if (file.isDirectory()) {
-        file.listFiles().each {f ->  calcLines(f)}
-    }
-    else {
-        def temp = 0;
-        file.each {
-            line ->
-//            if (!line.isEmpty())
-            ++counter;
-        }
+    static List<Transformation> setMandelstam(Map<String, String> momentumMasses) {
+        if (momentumMasses.size() != 4)
+            throw new IllegalArgumentException();
+        Tensor[][] result = new Tensor[4][2];
+        int i = 0;
+        momentumMasses.each { a, b -> result[i][0] = parse(a); result[i++][1] = parse(b);}
+        return FeynCalcUtils.setMandelstam(result);
     }
 }
-
-calcLines(new File("/home/stas/Projects/commons-math3-3.0-src/src/main/java/"))
-calcLines(new File("/home/stas/Projects/redberry/redberry/src/"))
-calcLines(new File("/home/stas/Projects/redberry/redberry-physics/src/"))
-calcLines(new File("/home/stas/Projects/redberry/redberry-groovy/src/"))
-println counter

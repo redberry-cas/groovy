@@ -26,12 +26,26 @@ package cc.redberry.groovy.scripts
 import cc.redberry.groovy.RedberryGroovy
 
 import static cc.redberry.core.tensor.Tensors.parse
+import cc.redberry.core.tensor.SimpleTensor
+import cc.redberry.core.number.Complex
+import cc.redberry.physics.feyncalc.FeynCalcUtils
+import cc.redberry.core.tensor.Tensor
+import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion
+import cc.redberry.core.context.CC
+
+import static cc.redberry.core.indices.IndexType.LatinLower1
+import static cc.redberry.core.indices.IndexType.LatinUpper1
+import cc.redberry.core.indexmapping.IndexMapping
+import cc.redberry.core.indexmapping.IndexMappings
+
+import static cc.redberry.core.tensor.Tensors.addSymmetry
+import static cc.redberry.core.tensor.Tensors.addAntiSymmetry
 
 /**
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
-RedberryGroovy.withRedberry()
+//RedberryGroovy.withRedberry()
 
 //def x
 //x = parse('(m**4+(1/2)*m**2*M**2+(1/16)*M**4)**(-1)*(-m**2-(1/4)*M**2)**(-1)*(-m**2*M-(1/4)*M**3)**(-1)*((8*m**2*(-m**2-(1/4)*M**2)*N*M**3*(-m**2*M-(1/4)*M**3)+48*m**2*M*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*N*(-m**2*M-(1/4)*M**3)-4*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*N*M**3*(-m**2*M-(1/4)*M**3)-16*m**2*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*(-m**2-(1/4)*M**2)*N*M**2+2*(-m**2-(1/4)*M**2)*N*M**4*(-m**2*M-(1/4)*M**3)*m+8*m**3*(-m**2-(1/4)*M**2)*N*M**2*(-m**2*M-(1/4)*M**3)+8*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*N*M**2*(-m**2*M-(1/4)*M**3)*m)*k1+(-4*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*N*M**3*(-m**2*M-(1/4)*M**3)+2*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*(-m**2-(1/4)*M**2)*N*M**4-4*(-m**2-(1/4)*M**2)*N*M**4*(-m**2*M-(1/4)*M**3)*m-(-m**2-(1/4)*M**2)*N*M**5*(-m**2*M-(1/4)*M**3)-8*m**2*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*(-m**2-(1/4)*M**2)*N*M**2-4*m**2*(-m**2-(1/4)*M**2)*N*M**3*(-m**2*M-(1/4)*M**3)-8*(m**4+(1/2)*m**2*M**2+(1/16)*M**4)*N*M**2*(-m**2*M-(1/4)*M**3)*m)*k2)')
@@ -82,6 +96,42 @@ println([1, 2] + [2, 2])
 //println t.class.getSimpleName()
 //
 
-def t = [parse('a'), parse('b')]
-t << parse('a') << parse('b')
+//def t = [parse('a'), parse('b')]
+//t << parse('a') << parse('b')
+//println t
+
+RedberryGroovy.withRedberry()
+
+GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+CC.current().parseManager.defaultParserPreprocessors.add(indicesInsertion);
+def setMatrix = {
+    a, b ->
+    if (a instanceof String)
+        a = parse(a)
+    indicesInsertion.addInsertionRule(a, b)
+}
+
+setMatrix(''' G_a^a'_b' ''', LatinLower1)
+setMatrix(''' G5^v'_a' ''', LatinLower1)
+
+def t = parse(' G_a*G5*G_b*G_c*G_e*G5 ')
+
+def commutator = [parse(' G5*G_b = - G_b*G5'), parse('G5*G5 = 1')]
+
+def old
+while (true) {
+    old = t
+    t = commutator >> t
+    if (t == old)
+        break;
+}
+
+addAntiSymmetry('R_ab', 1, 0)
+def from = parse('R_{ab}*A_c+R_{bc}*A_a'),
+    to = parse('R_{ij}*A_k+R_{jk}*A_i')
+def port = IndexMappings.createPort(from, to)
+def mapping
+while ((mapping = port.take()) != null)
+    println mapping
+
 println t
