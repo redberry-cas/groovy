@@ -26,22 +26,22 @@ package cc.redberry.groovy
 import cc.redberry.core.indexmapping.IndexMappingBuffer
 import cc.redberry.core.indexmapping.IndexMappings
 import cc.redberry.core.indexmapping.MappingsPort
+import cc.redberry.core.tensor.ApplyIndexMapping
 import cc.redberry.core.tensor.Expression
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.tensor.Tensors
 import cc.redberry.core.tensor.iterator.TensorFirstIterator
 import cc.redberry.core.tensor.iterator.TensorLastIterator
+import cc.redberry.core.tensor.iterator.TraverseGuide
 import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.substitutions.Substitution
+import cc.redberry.core.transformations.substitutions.SubstitutionIterator
 import cc.redberry.core.utils.TensorUtils
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 import static cc.redberry.core.tensor.Tensors.*
-import cc.redberry.core.transformations.TransformationCollection
-import org.codehaus.groovy.runtime.DefaultGroovyMethods
-import cc.redberry.core.tensor.ApplyIndexMapping
 
-import cc.redberry.core.tensor.iterator.TraverseGuide
-import cc.redberry.core.transformations.substitutions.SubstitutionIterator
+//import cc.redberry.core.transformations.TransformationCollection
 
 /**
  * @author Dmitry Bolotin
@@ -153,7 +153,7 @@ class Redberry {
 
     static Tensor rightShift(Collection transformations, Tensor tensor) {
 
-        transformations = transformations.collect { if (it instanceof String) parse(it) else it }
+        transformations = transformations.collect { if (it instanceof String) parse(it); else it; }
 
         if (isCollectionOfType(transformations, Expression))
             return new Substitution(transformations as Expression[]).transform(tensor);
@@ -177,8 +177,8 @@ class Redberry {
     }
 
     static Object asType(Collection collection, Class clazz) {
-        if (clazz == Transformation)
-            return new TransformationCollection(collection.collect { if (it instanceof String) parse(it) else it })
+        //if (clazz == Transformation)
+        //    return new TransformationCollection(collection.collect { if (it instanceof String) parse(it) else it })
         return DefaultGroovyMethods.asType(collection, clazz);
     }
 
