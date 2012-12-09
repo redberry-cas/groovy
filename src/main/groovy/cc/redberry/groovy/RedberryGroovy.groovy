@@ -44,7 +44,6 @@ import static cc.redberry.core.tensor.Tensors.*
  * @author Stanislav Poslavsky
  */
 class RedberryGroovy {
-
     public static boolean isCollectionOfType(collection, Class type) {
         for (t in collection)
             if (!type.isAssignableFrom(t.class))
@@ -56,24 +55,24 @@ class RedberryGroovy {
 
         String.metaClass.asType {
             Class clazz ->
-            switch (clazz) {
-                case SimpleIndices:
-                    return ParserIndices.parseSimple(delegate)
-                case Indices:
-                    return IndicesFactory.createSorted(ParserIndices.parse(delegate))
-                case Tensor:
-                    return parse(delegate)
-                default:
-                    return delegate.asType(clazz)
-            }
+                switch (clazz) {
+                    case SimpleIndices:
+                        return ParserIndices.parseSimple(delegate)
+                    case Indices:
+                        return IndicesFactory.createSorted(ParserIndices.parse(delegate))
+                    case Tensor:
+                        return parse(delegate)
+                    default:
+                        return delegate.asType(clazz)
+                }
         }
 
         Indices.metaClass.asType {
             Class clazz ->
-            if (clazz == int[])
-                delegate.allIndices.copy()
-            else
-                delegate.asType(clazz)
+                if (clazz == int[])
+                    delegate.allIndices.copy()
+                else
+                    delegate.asType(clazz)
         }
 
         Indices.metaClass.getAt {
@@ -86,11 +85,11 @@ class RedberryGroovy {
 
         int[].metaClass.asType {
             Class clazz
-            ->
-            if (clazz == Indices)
-                IndicesFactory.createSimple(null, delegate)
-            else
-                delegate.asType(clazz)
+                ->
+                if (clazz == Indices)
+                    IndicesFactory.createSimple(null, delegate)
+                else
+                    delegate.asType(clazz)
         }
 
 
@@ -99,10 +98,9 @@ class RedberryGroovy {
                 return delegate.transform(it)
             else if (it instanceof Collection<Tensor>) {
                 Collection r = []
-                it.each { a -> r << delegate.transform(a)}
+                it.each { a -> r << delegate.transform(a) }
                 return r
-            }
-            else
+            } else
                 throw new UnsupportedOperationException()
         }
 
@@ -113,8 +111,7 @@ class RedberryGroovy {
                 for (Transformation tr : delegate)
                     it = tr.transform(it)
                 return it
-            }
-            else
+            } else
                 return delegate.rightShift(it)
         }
 
@@ -129,22 +126,21 @@ class RedberryGroovy {
                 for (Transformation tr : delegate)
                     it = tr.transform(it)
                 return it
-            }
-            else
+            } else
                 return delegate.rightShift(it)
         }
 
         Tensor.metaClass.getAt {
             b ->
-            if (b instanceof IntRange)
-                return delegate.getRange(b.from, b.to)
-            if (b instanceof Collection)
-                if (b.size() == 1)
-                    return delegate.get(b[0])
-                else
-                    return delegate.get(b[0]).getAt(b[1..b.size() - 1])
-            if (b instanceof Integer)
-                return delegate.get(b)
+                if (b instanceof IntRange)
+                    return delegate.getRange(b.from, b.to)
+                if (b instanceof Collection)
+                    if (b.size() == 1)
+                        return delegate.get(b[0])
+                    else
+                        return delegate.get(b[0]).getAt(b[1..b.size() - 1])
+                if (b instanceof Integer)
+                    return delegate.get(b)
         }
 
 //        Tensor.metaClass.putAt {
@@ -157,10 +153,10 @@ class RedberryGroovy {
 
         Tensor.metaClass.multiply {
             b ->
-            if (b instanceof Number)
-                return multiply(b, new Complex(b))
-            else
-                return multiplyAndRenameConflictingDummies(delegate, b)
+                if (b instanceof Number)
+                    return multiply(b, new Complex(b))
+                else
+                    return multiplyAndRenameConflictingDummies(delegate, b)
         }
         Tensor.metaClass.div {
             b -> multiplyAndRenameConflictingDummies(delegate, reciprocal(b))
@@ -189,30 +185,30 @@ class RedberryGroovy {
 
         Tensor.metaClass.asType() {
             Class b ->
-            if (b == Tensor[])
-                return delegate.toArray()
+                if (b == Tensor[])
+                    return delegate.toArray()
         }
 
         Integer.metaClass.multiply {
             b ->
-            if (b instanceof Tensor)
-                return multiply(new Complex(delegate), b)
-            else
-                return delegate.multiply(b)
+                if (b instanceof Tensor)
+                    return multiply(new Complex(delegate), b)
+                else
+                    return delegate.multiply(b)
         }
 
         Tensor.metaClass.equals {
             other ->
-            if (other instanceof Number)
-                other = new Complex(other)
-            return TensorUtils.equals(delegate, other)
+                if (other instanceof Number)
+                    other = new Complex(other)
+                return TensorUtils.equals(delegate, other)
         }
 
         Tensor.metaClass.compareTo {
             other ->
-            if (other instanceof Number)
-                other = new Complex(other)
-            return TensorUtils.compare1(delegate, other)
+                if (other instanceof Number)
+                    other = new Complex(other)
+                return TensorUtils.compare1(delegate, other)
         }
 
         IntArray.metaClass.getAt {
@@ -225,11 +221,11 @@ class RedberryGroovy {
 
         IntArray.metaClass.asType {
             Class type ->
-            if (type == SimpleIndices)
-                return IndicesFactory.createSimple(null, delegate.copy())
-            if (type == Indices)
-                return IndicesFactory.createSorted(delegate.copy())
-            return delegate.asType(type)
+                if (type == SimpleIndices)
+                    return IndicesFactory.createSimple(null, delegate.copy())
+                if (type == Indices)
+                    return IndicesFactory.createSorted(delegate.copy())
+                return delegate.asType(type)
         }
     }
 

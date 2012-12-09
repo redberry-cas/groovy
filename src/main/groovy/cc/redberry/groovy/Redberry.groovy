@@ -49,6 +49,8 @@ import static cc.redberry.core.tensor.Tensors.*
  */
 class Redberry {
 
+    public static final ThreadLocal<List<Object>> outputted = new ThreadLocal<List<Object>>();
+
     /*
     * Arithmetic operations
     */
