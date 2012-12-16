@@ -34,6 +34,7 @@ import cc.redberry.core.tensor.iterator.TensorFirstIterator
 import cc.redberry.core.tensor.iterator.TensorLastIterator
 import cc.redberry.core.tensor.iterator.TraverseGuide
 import cc.redberry.core.transformations.Transformation
+import cc.redberry.core.transformations.TransformationCollection
 import cc.redberry.core.transformations.substitutions.Substitution
 import cc.redberry.core.transformations.substitutions.SubstitutionIterator
 import cc.redberry.core.utils.TensorUtils
@@ -48,9 +49,6 @@ import static cc.redberry.core.tensor.Tensors.*
  * @author Stanislav Poslavsky
  */
 class Redberry {
-
-    public static final ThreadLocal<List<Object>> outputted = new ThreadLocal<List<Object>>();
-
     /*
     * Arithmetic operations
     */
@@ -137,6 +135,21 @@ class Redberry {
     /*
     * Transformations
     */
+
+    static Transformation and(Transformation tr1, Transformation tr2) {
+        def transformations = [];
+        if (tr1 instanceof TransformationCollection)
+            transformations.addAll(tr1.transformations)
+        else
+            transformations << tr1
+
+        if (tr2 instanceof TransformationCollection)
+            transformations.addAll(tr2.transformations)
+        else
+            transformations << tr2
+
+        new TransformationCollection(transformations)
+    }
 
     private static boolean isCollectionOfType(collection, Class type) {
         for (t in collection)
@@ -291,6 +304,4 @@ class Redberry {
         long stop = System.currentTimeMillis();
         println('Time: ' + (stop - start) + ' ms.')
     }
-
-
 }
