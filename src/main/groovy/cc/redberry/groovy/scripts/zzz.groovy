@@ -23,6 +23,11 @@
 
 package cc.redberry.groovy.scripts
 
+import cc.redberry.core.indices.SimpleIndices
+import cc.redberry.core.parser.ParserIndices
+import cc.redberry.core.tensor.Tensors
+import cc.redberry.core.transformations.RemoveDueToSymmetry
+import cc.redberry.core.utils.TensorUtils
 import cc.redberry.groovy.Redberry
 import cc.redberry.core.indexmapping.MappingsPort
 import cc.redberry.core.indexmapping.IndexMappingBuffer
@@ -92,12 +97,12 @@ use(Redberry) {
 
     def subs = {
         t, expr ->
-        def c
-        t.transformEachInTree {
-            c = +(expr[0] % it)
-            if (c != null) c >> expr[1]
-            else it
-        }
+            def c
+            t.transformEachInTree {
+                c = +(expr[0] % it)
+                if (c != null) c >> expr[1]
+                else it
+            }
     }
 
     def t = 'z_m*Cos[x_m*y^m - x_n*(z^n + t^n)] + t_m'.t
@@ -107,17 +112,18 @@ use(Redberry) {
     println t
     println subs(t, 'x = F_a^a'.t)
 
-    MappingsPort.metaClass.next = {
-        def c = delegate.take()
-        delegate = this
-        return c
-    }
+
 
     def a = 'g_mn'.t
     def m = a % a
     println(++m)
     println(++m >> a)
-    println(++m >> a)
+//    println(++m >> a)
+
+    Tensors.setAntiSymmetric('e_abcd')
+    def tt = 'g_fa*e_bcde + g_fb*e_cdea + g_fc*e_deab+g_fd*e_eabc+g_fe*e_abcd'.t
+
+    TensorUtils.findIndicesSymmetries(ParserIndices.parseSimple('_abcdef'), tt).basisSymmetries.each { println it }
 //    def c
 //    while (c = +m != null)
 //        println c

@@ -43,7 +43,7 @@ class InverseOrderOfGammas implements Transformation {
 
     private final SimpleTensor GAMMA;
 
-    private InverseOrderOfGammas(GAMMA) {
+    private InverseOrderOfGammas(SimpleTensor GAMMA) {
         this.GAMMA = GAMMA
     }
 

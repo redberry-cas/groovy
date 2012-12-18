@@ -54,4 +54,6 @@ use(Redberry) {
     setMatrix(''' v^b' ''', LatinLower1)
 
     println InverseOrderOfGammas.InverseOrderOfGammas >> 'pv*G_a*G_b*v'.t
+
+    println 1 % 2
 }
