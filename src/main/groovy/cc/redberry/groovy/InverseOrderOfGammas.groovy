@@ -38,6 +38,7 @@ import static cc.redberry.core.tensor.Tensors.expression
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
+//todo move to physics
 class InverseOrderOfGammas implements Transformation {
     public static final InverseOrderOfGammas InverseOrderOfGammas = new InverseOrderOfGammas();
 
