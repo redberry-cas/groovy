@@ -348,7 +348,7 @@ class Redberry {
         return parse(string.toString())
     }
 
-    static Tensor getI(String string) {
-        return ParserIndices.parse(string)
+    static Indices getI(String string) {
+        return ParserIndices.parseSimple(string)
     }
 }
