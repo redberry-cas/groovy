@@ -26,6 +26,17 @@ package cc.redberry.groovy
 import cc.redberry.core.indexmapping.IndexMappingBuffer
 import cc.redberry.core.indexmapping.IndexMappings
 import cc.redberry.core.indexmapping.MappingsPort
+import cc.redberry.core.indices.IndexType
+import cc.redberry.core.indices.Indices
+import cc.redberry.core.indices.IndicesBuilder
+import cc.redberry.core.indices.IndicesFactory
+import cc.redberry.core.indices.SimpleIndices
+import cc.redberry.core.indices.SimpleIndicesBuilder
+import cc.redberry.core.number.Complex
+import cc.redberry.core.number.Numeric
+import cc.redberry.core.number.Rational
+import cc.redberry.core.number.Real
+import cc.redberry.core.parser.ParserIndices
 import cc.redberry.core.tensor.ApplyIndexMapping
 import cc.redberry.core.tensor.Expression
 import cc.redberry.core.tensor.Tensor
@@ -49,42 +60,84 @@ import static cc.redberry.core.tensor.Tensors.*
  * @author Stanislav Poslavsky
  */
 class Redberry {
+
+    static Real number2Real(Number num) {
+        if (num instanceof Double || num instanceof BigDecimal)
+            return new Numeric(num.doubleValue());
+        else
+            return new Rational(num.toBigInteger());
+    }
+
+
+    private static Complex number2Complex(Number num) {
+        return new Complex(number2Real(num));
+    }
+
     /*
-    * Arithmetic operations
+    * Math operations
     */
 
-    static Tensor plus(Tensor a, Tensor b) {
-        return sum(a, b);
-    }
+    static Tensor plus(Tensor a, Tensor b) { Tensors.sum(a, b); }
 
-    static Tensor plus(Tensor a, Number b) {
-        //todo
-        return sum(a, b);
-    }
+    static Tensor plus(Tensor a, Number b) { Tensors.sum(a, number2Complex(b)); }
 
-    static Tensor multiply(Tensor a, Tensor b) {
-        return multiplyAndRenameConflictingDummies(a, b);
-    }
+    static Tensor div(Tensor a, Tensor b) { Tensors.divide(a, b); }
 
-    static Tensor negative(Tensor a) {
-        return negate(a);
-    }
+    static Tensor div(Tensor a, Number b) { Tensors.divide(a, number2Complex(b)); }
 
-    static Tensor positive(Tensor a) {
-        return a;
-    }
+    static Tensor multiply(Tensor a, Tensor b) { multiplyAndRenameConflictingDummies(a, b); }
 
-    static Tensor sin(Tensor a) {
-        return Tensors.sin(a);
-    }
+    static Tensor multiply(Tensor a, Number b) { Tensors.multiply(a, number2Complex(b)); }
 
-    static Tensor getAt(Tensor a, int position) {
-        return a.get(position);
-    }
+    static Tensor negative(Tensor a) { negate(a); }
+
+    static Tensor positive(Tensor a) { a; }
+
+    static Tensor getAt(Tensor a, int position) { a.get(position); }
 
     static Tensor getAt(Tensor a, int ... position) {
         //todo
         return a.get(position);
+    }
+
+    /*
+     * Indices
+     */
+
+    static int getAt(Indices indices, int position) { indices.get(position) }
+
+    static int getAt(Indices indices, IndexType type, int position) { indices.get(type, position) }
+
+    static Indices asType(int[] indices, Class clazz) {
+        if (clazz == SimpleIndices)
+            return IndicesFactory.createSimple(null, indices)
+        else if (clazz == Indices)
+            return IndicesFactory.createSorted(indices)
+        else
+            return DefaultGroovyMethods.asType(indices, clazz)
+    }
+
+
+    static SimpleIndices plus(SimpleIndices indices, toAdd) {
+        if (toAdd instanceof String)
+            toAdd = ParserIndices.parseSimple(toAdd);
+        if (toAdd instanceof Indices || toAdd instanceof Integer || toAdd instanceof int[])
+            return new SimpleIndicesBuilder().append(indices).append(toAdd).indices;
+        if (toAdd instanceof Collection)
+            return new SimpleIndicesBuilder().append(indices).append(toAdd as int[]).indices;
+        else
+            throw new IllegalArgumentException()
+    }
+
+    static Indices plus(Indices indices, toAdd) {
+        if (toAdd instanceof String)
+            toAdd = ParserIndices.parseSimple(toAdd);
+        if (toAdd instanceof Indices || toAdd instanceof Integer || toAdd instanceof int[])
+            return new SimpleIndicesBuilder().append(indices).append(toAdd).indices;
+        if (toAdd instanceof Collection)
+            return new IndicesBuilder().append(indices).append(toAdd as int[]).indices;
+        else
+            throw new IllegalArgumentException()
     }
 
     /*
@@ -197,21 +250,18 @@ class Redberry {
         return DefaultGroovyMethods.asType(collection, clazz);
     }
 
+
+    static Tensor asType(Number num, Class clazz) {
+        if (clazz == Tensor)
+            return number2Complex(num)
+        return DefaultGroovyMethods.asType(num, clazz)
+    }
     /*
    * Comparison
     */
 
     static boolean equals(Tensor a, Tensor b) {
         return TensorUtils.equals(a, b);
-    }
-
-
-    static boolean equals(Tensor a, String b) {
-        return TensorUtils.equals(a, parse(b));
-    }
-
-    static boolean equals(String b, Tensor a) {
-        return TensorUtils.equals(a, parse(b));
     }
 
     static MappingsPort mod(Tensor a, Tensor b) {
@@ -275,7 +325,7 @@ class Redberry {
     static Object asType(String string, Class clazz) {
         if (clazz == Tensor)
             return parse(string);
-        return string.asType(clazz);
+        return DefaultGroovyMethods.asType(string, clazz);
     }
 
     /*
@@ -286,6 +336,10 @@ class Redberry {
         return parse(string)
     }
 
+    static Tensor getT(Number string) {
+        return number2Complex(string)
+    }
+
     static Tensor eq(String string, Tensor tensor) {
         return expression(parse(string), tensor)
     }
@@ -294,14 +348,7 @@ class Redberry {
         return parse(string.toString())
     }
 
-    /*
-    * Utility static functions
-    */
-
-    public static void timing(Closure closure) {
-        long start = System.currentTimeMillis();
-        closure.call();
-        long stop = System.currentTimeMillis();
-        println('Time: ' + (stop - start) + ' ms.')
+    static Tensor getI(String string) {
+        return ParserIndices.parse(string)
     }
 }

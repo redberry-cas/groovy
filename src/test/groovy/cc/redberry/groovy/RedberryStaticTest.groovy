@@ -1,5 +1,6 @@
 package cc.redberry.groovy
 
+import cc.redberry.core.transformations.RemoveDueToSymmetry
 import org.junit.Test
 
 import static cc.redberry.core.tensor.Tensors.addAntiSymmetry
@@ -43,8 +44,18 @@ class RedberryStaticTest {
             addSymmetry('R_abcd', 2, 3, 0, 1)
 
             def tensor = 'R^acbd*Sin[R_abcd*R^abcd]'.t;
-            println Differentiate[Expand & EliminateMetrics, 'R^ma_m^b', 'R^mc_m^d'] >> tensor
-            assertTrue tensor << Differentiate['d=0'.t, 'f'] == '2*f+c'.t
+            def tr =
+                Differentiate[ExpandAndEliminate, 'R^ma_m^b', 'R^mc_m^d'] & EliminateFromSymmetries & 'd_m^m = 4'.t & 'R^a_man = R_mn'.t & 'R^a_a = R'.t
+
+            assertTrue tr >> tensor == '6*R*Cos[R_{abcd}*R^{abcd}]-4*Sin[R_{abcd}*R^{abcd}]*R_{ab}*R_{cd}*R^{acbd}'.t
+        }
+    }
+
+    @Test
+    void testNumerator1() throws Exception {
+        use(Redberry) {
+            assertTrue Numerator >> '1/a+1/b'.t == '1/a+1/b'.t
+            assertTrue Denominator >> '1/a+1/b'.t == '1'.t
         }
     }
 }

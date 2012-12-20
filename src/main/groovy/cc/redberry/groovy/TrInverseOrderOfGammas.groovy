@@ -23,7 +23,6 @@
 
 package cc.redberry.groovy
 
-import cc.redberry.core.indexmapping.IndexMapping
 import cc.redberry.core.indexmapping.IndexMappings
 import cc.redberry.core.tensor.Product
 import cc.redberry.core.tensor.SimpleTensor
@@ -39,16 +38,17 @@ import static cc.redberry.core.tensor.Tensors.expression
  * @author Stanislav Poslavsky
  */
 //todo move to physics
-class InverseOrderOfGammas implements Transformation {
-    public static final InverseOrderOfGammas InverseOrderOfGammas = new InverseOrderOfGammas();
+//todo add gamma5
+class TrInverseOrderOfGammas implements Transformation {
+    public static final TrInverseOrderOfGammas InverseOrderOfGammas = new TrInverseOrderOfGammas();
 
     private final SimpleTensor GAMMA;
 
-    private InverseOrderOfGammas(SimpleTensor GAMMA) {
+    private TrInverseOrderOfGammas(SimpleTensor GAMMA) {
         this.GAMMA = GAMMA
     }
 
-    InverseOrderOfGammas() {
+    TrInverseOrderOfGammas() {
         this.GAMMA = Tensors.parse(''' G_a^a'_b' ''')
     }
 

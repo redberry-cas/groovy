@@ -43,7 +43,7 @@
         <version>7</version>
     </parent>
 
-    <name>redberry</name>
+    <name>redberry-groovy</name>
     <url>http://redberry.cc/</url>
 
     <description>
