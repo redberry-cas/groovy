@@ -151,6 +151,12 @@ class RedberryStatic {
     public static final Transformation Together = cc.redberry.core.transformations.fractions.Together.INSTANCE;
 
     /**
+     * Puts terms in a sum over a common denominator, and cancels all symbolic factors in the result.
+     */
+    public static final Transformation TogetherFactor = cc.redberry.core.transformations.fractions.Together.TOGETHER_FACTOR;
+
+
+    /**
      * Replaces complex numbers in the expression to their complex conjugation.
      */
     public static final Transformation Conjugate = cc.redberry.core.transformations.ComplexConjugate.CONJUGATE;
@@ -169,6 +175,11 @@ class RedberryStatic {
      * Puts terms in a sum together factoring out all scalars in each term.
      */
     public static final Transformation CollectNonScalars = cc.redberry.core.transformations.CollectNonScalars.CollectNonScalars;
+
+    /**
+     * Factors a polynomial over the integers.
+     */
+    public static final Transformation Factor = cc.redberry.core.transformations.factor.Factor.FACTOR;
 
     public static IndexType defaultMatrixType = IndexType.LatinLower1
 

@@ -23,11 +23,16 @@
 
 package cc.redberry.groovy
 
+import cc.redberry.core.indices.IndexType
+import cc.redberry.core.tensor.Expression
 import cc.redberry.core.tensor.SimpleTensor
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.TransformationCollection
 import cc.redberry.physics.feyncalc.FeynCalcUtils
+import cc.redberry.physics.feyncalc.TrInverseOrderOfMatrices
+import cc.redberry.physics.oneloopdiv.OneLoopCounterterms
+import cc.redberry.physics.oneloopdiv.OneLoopInput
 
 import static cc.redberry.core.tensor.Tensors.parse
 
@@ -48,7 +53,7 @@ public class RedberryPhysics {
 
     public static final GDiracTrace DiracTrace = new GDiracTrace();
 
-    static class GDiracTrace implements Transformation {
+    static final class GDiracTrace implements Transformation {
         @Override
         Tensor transform(Tensor t) {
             return cc.redberry.physics.feyncalc.DiracTrace.trace(t)
@@ -74,7 +79,7 @@ public class RedberryPhysics {
 
     public static final GUnitaryTrace UnitaryTrace = new GUnitaryTrace();
 
-    static class GUnitaryTrace implements Transformation {
+    static final class GUnitaryTrace implements Transformation {
         @Override
         Tensor transform(Tensor t) {
             return cc.redberry.physics.feyncalc.UnitaryTrace.unitaryTrace(t)
@@ -90,7 +95,7 @@ public class RedberryPhysics {
 
     public static final GLeviCivita LeviCivitaSimplify = new GLeviCivita();
 
-    static class GLeviCivita implements Transformation {
+    static final class GLeviCivita implements Transformation {
         @Override
         Tensor transform(Tensor t) {
             use(Redberry) {
@@ -106,23 +111,59 @@ public class RedberryPhysics {
         }
     }
 
-    public static final GInverseOrderOfGammas InverseOrderOfGammas = new GInverseOrderOfGammas();
+    public static final GInverseOrderOfMatrices InverseOrderOfMatrices = new GInverseOrderOfMatrices();
 
-    static class GInverseOrderOfGammas implements Transformation {
-        @Override
-        Tensor transform(Tensor t) {
-            use(Redberry) {
-                return TrInverseOrderOfGammas.inverseOrderOfGammas(t, 'G_a'.t)
-            }
-        }
+    static final class GInverseOrderOfMatrices {
 
-        Transformation getAt(gamma) {
-            use(Redberry) {
-                if (gamma instanceof String) gamma = gamma.t
-                return new TrInverseOrderOfGammas(gamma);
-            }
+        Transformation getAt(IndexType type) {
+            return new TrInverseOrderOfMatrices(type);
         }
     }
 
+    /*
+     * One-loop calculations
+     */
 
+    public static OneLoopCounterterms oneloopdiv2(Expression KInv,
+                                                  Expression K,
+                                                  Expression S,
+                                                  Expression W,
+                                                  Expression F) {
+        OneLoopInput input = new OneLoopInput(2, KInv, K, S, W, null, null, F)
+        return OneLoopCounterterms.calculateOneLoopCounterterms(input);
+    }
+
+    public static OneLoopCounterterms oneloopdiv2(Expression KInv,
+                                                  Expression K,
+                                                  Expression S,
+                                                  Expression W,
+                                                  Expression F,
+                                                  Transformation transformation) {
+        OneLoopInput input = new OneLoopInput(2, KInv, K, S, W, null, null, F, transformation)
+        return OneLoopCounterterms.calculateOneLoopCounterterms(input);
+    }
+
+
+    public static OneLoopCounterterms oneloopdiv4(Expression KInv,
+                                                  Expression K,
+                                                  Expression S,
+                                                  Expression W,
+                                                  Expression N,
+                                                  Expression M,
+                                                  Expression F) {
+        OneLoopInput input = new OneLoopInput(4, KInv, K, S, W, N, M, F)
+        return OneLoopCounterterms.calculateOneLoopCounterterms(input);
+    }
+
+    public static OneLoopCounterterms oneloopdiv4(Expression KInv,
+                                                  Expression K,
+                                                  Expression S,
+                                                  Expression W,
+                                                  Expression N,
+                                                  Expression M,
+                                                  Expression F,
+                                                  Transformation transformation) {
+        OneLoopInput input = new OneLoopInput(4, KInv, K, S, W, N, M, F, transformation)
+        return OneLoopCounterterms.calculateOneLoopCounterterms(input);
+    }
 }
