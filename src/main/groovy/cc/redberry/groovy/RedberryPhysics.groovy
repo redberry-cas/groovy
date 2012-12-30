@@ -115,8 +115,11 @@ public class RedberryPhysics {
 
     static final class GInverseOrderOfMatrices {
 
-        Transformation getAt(IndexType type) {
-            return new TrInverseOrderOfMatrices(type);
+        Transformation getAt(Collection<IndexType> types) {
+            List<Transformation> tr = new ArrayList<>();
+            for (IndexType type : types)
+                tr.add(new TrInverseOrderOfMatrices(type));
+            return new TransformationCollection(tr);
         }
     }
 

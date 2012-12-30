@@ -81,6 +81,10 @@ class Redberry {
 
     static Tensor plus(Tensor a, Number b) { Tensors.sum(a, number2Complex(b)); }
 
+    static Tensor minus(Tensor a, Tensor b) { Tensors.subtract(a, b); }
+
+    static Tensor minus(Tensor a, Number b) { Tensors.subtract(a, number2Complex(b)); }
+
     static Tensor div(Tensor a, Tensor b) { Tensors.divide(a, b); }
 
     static Tensor div(Tensor a, Number b) { Tensors.divide(a, number2Complex(b)); }

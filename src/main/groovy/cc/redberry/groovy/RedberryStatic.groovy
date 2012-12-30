@@ -155,7 +155,6 @@ class RedberryStatic {
      */
     public static final Transformation TogetherFactor = cc.redberry.core.transformations.fractions.Together.TOGETHER_FACTOR;
 
-
     /**
      * Replaces complex numbers in the expression to their complex conjugation.
      */
@@ -232,6 +231,16 @@ class RedberryStatic {
 
     public static void setVector(String vector) {
         setVector(vector, defaultMatrixType)
+    }
+
+    public static void setVectors(String... vectors) {
+        for (vector in vectors)
+            setVector(vector, defaultMatrixType)
+    }
+
+    public static void setCoVectors(String... vectors) {
+        for (vector in vectors)
+            setCoVector(vector, defaultMatrixType)
     }
 
     public static void setCoVector(String covector) {
