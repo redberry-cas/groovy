@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -9,7 +9,7 @@
  *
  * Redberry is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * Redberry is distributed in the hope that it will be useful,
@@ -41,12 +41,12 @@ import cc.redberry.core.tensor.ApplyIndexMapping
 import cc.redberry.core.tensor.Expression
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.tensor.Tensors
-import cc.redberry.core.tensor.iterator.TensorFirstIterator
-import cc.redberry.core.tensor.iterator.TensorLastIterator
+import cc.redberry.core.tensor.iterator.FromParentToChildIterator
+import cc.redberry.core.tensor.iterator.FromChildToParentIterator
 import cc.redberry.core.tensor.iterator.TraverseGuide
 import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.TransformationCollection
-import cc.redberry.core.transformations.substitutions.Substitution
+import cc.redberry.core.transformations.substitutions.SubstitutionTransformation
 import cc.redberry.core.transformations.substitutions.SubstitutionIterator
 import cc.redberry.core.utils.TensorUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
@@ -116,7 +116,7 @@ class Redberry {
         if (clazz == SimpleIndices)
             return IndicesFactory.createSimple(null, indices)
         else if (clazz == Indices)
-            return IndicesFactory.createSorted(indices)
+            return IndicesFactory.create(indices)
         else
             return DefaultGroovyMethods.asType(indices, clazz)
     }
@@ -149,7 +149,7 @@ class Redberry {
     */
 
     static Tensor eachInTree(Tensor t, Object guide, Closure<Tensor> closure) {
-        TensorLastIterator iterator = new TensorLastIterator(t, guide);
+        FromChildToParentIterator iterator = new FromChildToParentIterator(t, guide);
         Tensor c;
         while ((c = iterator.next()) != null)
             closure.call(c);
@@ -157,7 +157,7 @@ class Redberry {
     }
 
     static Tensor eachInTreeReverse(Tensor t, TraverseGuide guide, Closure<Tensor> closure) {
-        TensorFirstIterator iterator = new TensorFirstIterator(t, guide);
+        FromParentToChildIterator iterator = new FromParentToChildIterator(t, guide);
         Tensor c;
         while ((c = iterator.next()) != null)
             closure.call(c);
@@ -228,7 +228,7 @@ class Redberry {
         transformations = transformations.collect { if (it instanceof String) parse(it); else it; }
 
         if (isCollectionOfType(transformations, Expression))
-            return new Substitution(transformations as Expression[]).transform(tensor);
+            return new SubstitutionTransformation(transformations as Expression[]).transform(tensor);
         def t = tensor
         for (Transformation tr in transformations)
             t = tr.transform(t);
@@ -241,7 +241,7 @@ class Redberry {
 
     static Tensor leftShift(Tensor tensor, Collection<Transformation> transformations) {
         if (isCollectionOfType(transformations, Expression))
-            return new Substitution(transformations as Expression[]).transform(tensor);
+            return new SubstitutionTransformation(transformations as Expression[]).transform(tensor);
         def t = tensor
         for (Transformation tr in transformations)
             t = tr.transform(t);

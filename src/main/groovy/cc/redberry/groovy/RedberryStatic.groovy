@@ -1,7 +1,7 @@
 /*
  * Redberry: symbolic tensor computations.
  *
- * Copyright (c) 2010-2012:
+ * Copyright (c) 2010-2013:
  *   Stanislav Poslavsky   <stvlpos@mail.ru>
  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
  *
@@ -9,7 +9,7 @@
  *
  * Redberry is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * Redberry is distributed in the hope that it will be useful,
@@ -25,21 +25,29 @@ package cc.redberry.groovy
 
 import cc.redberry.core.context.CC
 import cc.redberry.core.context.NameDescriptor
-import cc.redberry.core.context.NameDescriptorImpl
-import cc.redberry.core.context.OutputFormat
 import cc.redberry.core.indices.IndexType
-import cc.redberry.core.indices.IndicesTypeStructure
-import cc.redberry.core.indices.IndicesUtils
-import cc.redberry.core.indices.SimpleIndices
+import cc.redberry.core.indices.StructureOfIndices
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion
 import cc.redberry.core.tensor.SimpleTensor
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.tensor.Tensors
-import cc.redberry.core.transformations.ContractIndices
-import cc.redberry.core.transformations.Differentiate
-import cc.redberry.core.transformations.RemoveDueToSymmetry
+import cc.redberry.core.transformations.CollectNonScalarsTransformation
+import cc.redberry.core.transformations.CollectScalarFactorsTransformation
+import cc.redberry.core.transformations.ComplexConjugateTransformation
+import cc.redberry.core.transformations.EliminateMetricsTransformation
+import cc.redberry.core.transformations.DifferentiateTransformation
+import cc.redberry.core.transformations.EliminateFromSymmetriesTransformation
+import cc.redberry.core.transformations.ToNumericTransformation
 import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.TransformationCollection
+import cc.redberry.core.transformations.expand.ExpandAllTransformation
+import cc.redberry.core.transformations.expand.ExpandDenominatorTransformation
+import cc.redberry.core.transformations.expand.ExpandNumeratorTransformation
+import cc.redberry.core.transformations.expand.ExpandTransformation
+import cc.redberry.core.transformations.factor.FactorTransformation
+import cc.redberry.core.transformations.fractions.GetDenominatorTransformation
+import cc.redberry.core.transformations.fractions.GetNumeratorTransformation
+import cc.redberry.core.transformations.fractions.TogetherTransformation
 import cc.redberry.core.utils.ByteBackedBitArray
 
 import static cc.redberry.groovy.Redberry.number2Complex
@@ -51,9 +59,9 @@ class RedberryStatic {
      */
     public static final Transformation Expand = new Transformation() {
         @Override
-        Tensor transform(Tensor t) { cc.redberry.core.transformations.expand.Expand.expand(t) }
+        Tensor transform(Tensor t) { ExpandTransformation.expand(t) }
 
-        Transformation getAt(Transformation... transformations) { new cc.redberry.core.transformations.expand.Expand(transformations) }
+        Transformation getAt(Transformation... transformations) { new ExpandTransformation(transformations) }
     }
 
     /**
@@ -61,9 +69,9 @@ class RedberryStatic {
      */
     public static final Transformation ExpandAll = new Transformation() {
         @Override
-        Tensor transform(Tensor t) { cc.redberry.core.transformations.expand.ExpandAll.expandAll(t) }
+        Tensor transform(Tensor t) { ExpandAllTransformation.expandAll(t) }
 
-        Transformation getAt(Transformation... transformations) { new cc.redberry.core.transformations.expand.ExpandAll(transformations) }
+        Transformation getAt(Transformation... transformations) { new ExpandAllTransformation(transformations) }
     }
 
     /**
@@ -71,9 +79,9 @@ class RedberryStatic {
      */
     public static final Transformation ExpandNumerator = new Transformation() {
         @Override
-        Tensor transform(Tensor t) { cc.redberry.core.transformations.expand.ExpandNumerator.expandNumerator(t) }
+        Tensor transform(Tensor t) { ExpandNumeratorTransformation.expandNumerator(t) }
 
-        Transformation getAt(Transformation... transformations) { new cc.redberry.core.transformations.expand.ExpandNumerator(transformations) }
+        Transformation getAt(Transformation... transformations) { new ExpandNumeratorTransformation(transformations) }
     }
 
     /**
@@ -81,9 +89,9 @@ class RedberryStatic {
      */
     public static final Transformation ExpandDenominator = new Transformation() {
         @Override
-        Tensor transform(Tensor t) { cc.redberry.core.transformations.expand.ExpandDenominator.expandDenominator(t) }
+        Tensor transform(Tensor t) { ExpandDenominatorTransformation.expandDenominator(t) }
 
-        Transformation getAt(Transformation... transformations) { new cc.redberry.core.transformations.expand.ExpandDenominator(transformations) }
+        Transformation getAt(Transformation... transformations) { new ExpandDenominatorTransformation(transformations) }
     }
 
     /**
@@ -93,7 +101,7 @@ class RedberryStatic {
 
     static class StaticDifferentiate {
         Transformation getAt(SimpleTensor var) {
-            return new Differentiate(var);
+            return new DifferentiateTransformation(var);
         }
 
         Transformation getAt(Collection args) {
@@ -111,7 +119,7 @@ class RedberryStatic {
                     else
                         throw new IllegalArgumentException();
                 }
-                return new Differentiate(transformations as Transformation[], vars as SimpleTensor[]);
+                return new DifferentiateTransformation(transformations as Transformation[], vars as SimpleTensor[]);
             }
         }
     }
@@ -119,68 +127,68 @@ class RedberryStatic {
     /**
      * Eliminates metrics and Kronecker deltas
      */
-    public static final Transformation EliminateMetrics = ContractIndices.ContractIndices
+    public static final Transformation EliminateMetrics = EliminateMetricsTransformation.ELIMINATE_METRICS
 
     /**
      * Expands out product of sums and positive integer powers and
      * permanently eliminates metric and Kronecker deltas
      */
     public static final Transformation ExpandAndEliminate = new TransformationCollection(
-            new cc.redberry.core.transformations.expand.Expand(ContractIndices.ContractIndices),
-            ContractIndices.ContractIndices)
+            new ExpandTransformation(EliminateMetricsTransformation.ELIMINATE_METRICS),
+            EliminateMetricsTransformation.ELIMINATE_METRICS)
 
     /**
      * Gives the numerator of expression.
      */
-    public static final Transformation Numerator = cc.redberry.core.transformations.fractions.Numerator.NUMERATOR
+    public static final Transformation Numerator = GetNumeratorTransformation.GET_NUMERATOR
 
     /**
      * Gives the denominator of expression.
      */
-    public static final Transformation Denominator = cc.redberry.core.transformations.fractions.Denominator.DENOMINATOR
+    public static final Transformation Denominator = GetDenominatorTransformation.GET_DENOMINATOR
 
     /**
      * Removes parts of expressions, which are zero because of the symmetries (symmetric and antisymmetric at the same time).
      */
-    public static final Transformation EliminateFromSymmetries = RemoveDueToSymmetry.INSTANCE;
+    public static final Transformation EliminateFromSymmetries = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES;
 
     //todo incorporate with Factor
     /**
      * Puts terms in a sum over a common denominator, and cancels factors in the result.
      */
-    public static final Transformation Together = cc.redberry.core.transformations.fractions.Together.INSTANCE;
+    public static final Transformation Together = TogetherTransformation.TOGETHER;
 
     /**
      * Puts terms in a sum over a common denominator, and cancels all symbolic factors in the result.
      */
-    public static final Transformation TogetherFactor = cc.redberry.core.transformations.fractions.Together.TOGETHER_FACTOR;
+    public static final Transformation TogetherFactor = TogetherTransformation.TOGETHER_FACTOR;
 
     /**
      * Replaces complex numbers in the expression to their complex conjugation.
      */
-    public static final Transformation Conjugate = cc.redberry.core.transformations.ComplexConjugate.CONJUGATE;
+    public static final Transformation Conjugate = ComplexConjugateTransformation.COMPLEX_CONJUGATE;
 
     /**
      * Gives the numerical value of expression.
      */
-    public static final Transformation Numeric = cc.redberry.core.transformations.ToNumeric.TO_NUMERIC;
+    public static final Transformation Numeric = ToNumericTransformation.TO_NUMERIC;
 
     /**
      * Collects similar scalar factors in products.
      */
-    public static final Transformation CollectScalars = cc.redberry.core.transformations.CollectScalarFactors.COLLECT_SCALAR_FACTORS
+    public static final Transformation CollectScalars = CollectScalarFactorsTransformation.COLLECT_SCALAR_FACTORS
 
     /**
      * Puts terms in a sum together factoring out all scalars in each term.
      */
-    public static final Transformation CollectNonScalars = cc.redberry.core.transformations.CollectNonScalars.CollectNonScalars;
+    public static final Transformation CollectNonScalars = CollectNonScalarsTransformation.COLLECT_NON_SCALARS;
 
     /**
      * Factors a polynomial over the integers.
      */
-    public static final Transformation Factor = cc.redberry.core.transformations.factor.Factor.FACTOR;
+    public static final Transformation Factor = FactorTransformation.FACTOR;
 
-    public static IndexType defaultMatrixType = IndexType.LatinLower1
+    public static IndexType defaultMatrixType = IndexType.Matrix1
 
     private static GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
     static {
@@ -196,7 +204,7 @@ class RedberryStatic {
         use(Redberry) {
             SimpleTensor temp = matrix instanceof String ? matrix.t : matrix
             NameDescriptor nd = CC.getNameDescriptor(temp.name)
-            IndicesTypeStructure[] st = nd.getIndicesTypeStructures().clone();
+            StructureOfIndices[] st = nd.getStructuresOfIndices().clone();
 
             int[] allTypesCounts = st[0].typesCounts;
             ByteBackedBitArray[] allStates = st[0].states;
@@ -210,7 +218,7 @@ class RedberryStatic {
                 for (int i = 0; i < ul[0]; ++i)
                     allStates[type].set(i)
             }
-            st[0] = new IndicesTypeStructure(allTypesCounts, allStates);
+            st[0] = new StructureOfIndices(allTypesCounts, allStates);
             types.keySet().each {
                 indicesInsertion.addInsertionRule(CC.getNameManager().mapNameDescriptor(nd.getName(null), st), it)
             }
