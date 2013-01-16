@@ -26,12 +26,7 @@ package cc.redberry.groovy
 import cc.redberry.core.indexmapping.IndexMappingBuffer
 import cc.redberry.core.indexmapping.IndexMappings
 import cc.redberry.core.indexmapping.MappingsPort
-import cc.redberry.core.indices.IndexType
-import cc.redberry.core.indices.Indices
-import cc.redberry.core.indices.IndicesBuilder
-import cc.redberry.core.indices.IndicesFactory
-import cc.redberry.core.indices.SimpleIndices
-import cc.redberry.core.indices.SimpleIndicesBuilder
+import cc.redberry.core.indices.*
 import cc.redberry.core.number.Complex
 import cc.redberry.core.number.Numeric
 import cc.redberry.core.number.Rational
@@ -41,13 +36,13 @@ import cc.redberry.core.tensor.ApplyIndexMapping
 import cc.redberry.core.tensor.Expression
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.tensor.Tensors
-import cc.redberry.core.tensor.iterator.FromParentToChildIterator
 import cc.redberry.core.tensor.iterator.FromChildToParentIterator
+import cc.redberry.core.tensor.iterator.FromParentToChildIterator
 import cc.redberry.core.tensor.iterator.TraverseGuide
 import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.TransformationCollection
-import cc.redberry.core.transformations.substitutions.SubstitutionTransformation
 import cc.redberry.core.transformations.substitutions.SubstitutionIterator
+import cc.redberry.core.transformations.substitutions.SubstitutionTransformation
 import cc.redberry.core.utils.TensorUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
@@ -312,6 +307,26 @@ class Redberry {
         IndexMappingBuffer clone() {
             throw new IllegalStateException('Clone() cannot be invoked on this class.');
         }
+    }
+
+    /*
+     * Matrix descriptors
+     */
+
+    static MatrixDescriptor getCovector(IndexType type) {
+        return new MatrixDescriptor(type, 0, 1);
+    }
+
+    static MatrixDescriptor getVector(IndexType type) {
+        return new MatrixDescriptor(type, 1, 0);
+    }
+
+    static MatrixDescriptor getMatrix(IndexType type) {
+        return new MatrixDescriptor(type, 1, 1);
+    }
+
+    static MatrixDescriptor tensor(IndexType type, int upper, int lower) {
+        return new MatrixDescriptor(type, upper, lower);
     }
 
     /*

@@ -24,22 +24,14 @@
 package cc.redberry.groovy
 
 import cc.redberry.core.context.CC
-import cc.redberry.core.context.NameDescriptor
 import cc.redberry.core.indices.IndexType
 import cc.redberry.core.indices.StructureOfIndices
+import cc.redberry.core.parser.ParseTokenSimpleTensor
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion
 import cc.redberry.core.tensor.SimpleTensor
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.tensor.Tensors
-import cc.redberry.core.transformations.CollectNonScalarsTransformation
-import cc.redberry.core.transformations.CollectScalarFactorsTransformation
-import cc.redberry.core.transformations.ComplexConjugateTransformation
-import cc.redberry.core.transformations.EliminateMetricsTransformation
-import cc.redberry.core.transformations.DifferentiateTransformation
-import cc.redberry.core.transformations.EliminateFromSymmetriesTransformation
-import cc.redberry.core.transformations.ToNumericTransformation
-import cc.redberry.core.transformations.Transformation
-import cc.redberry.core.transformations.TransformationCollection
+import cc.redberry.core.transformations.*
 import cc.redberry.core.transformations.expand.ExpandAllTransformation
 import cc.redberry.core.transformations.expand.ExpandDenominatorTransformation
 import cc.redberry.core.transformations.expand.ExpandNumeratorTransformation
@@ -195,75 +187,56 @@ class RedberryStatic {
         CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
     }
 
-    //todo refactor this block
-
     /**
-     * Defines matrix
+     * Matrices definition
      */
-    public static void setMatrix(matrix, Map<IndexType, Collection> types) {
+    //public static void defineMatrix(Collection<String> tensors, MatrixDescriptor... descriptors) {
+    //    tensors.each { defineMatrix(it, descriptors) }
+    //}
+
+    public static void defineMatrix(Object... objs) {
+        def bufferOfTensors = [], bufferOfDescriptors = [];
+        objs.each { obj ->
+            if (obj instanceof MatrixDescriptor)
+                bufferOfDescriptors << obj
+            else {
+                if (bufferOfDescriptors) {
+                    bufferOfTensors.each { it -> defineMatrix(it, * bufferOfDescriptors) }
+                    bufferOfTensors = []
+                    bufferOfDescriptors = []
+                }
+                bufferOfTensors << obj
+            }
+        }
+        bufferOfTensors.each { it -> defineMatrix(it, * bufferOfDescriptors) }
+        //int index = objs.findIndexOf { it instanceof MatrixDescriptor }
+        //objs[0..<index].each { defineMatrix(it, * (objs[index..-1])) }
+    }
+
+    public static void defineMatrix(String tensor, MatrixDescriptor... descriptors) {
+        ParseTokenSimpleTensor token = CC.current().parseManager.parser.parse(tensor);
+
         use(Redberry) {
-            SimpleTensor temp = matrix instanceof String ? matrix.t : matrix
-            NameDescriptor nd = CC.getNameDescriptor(temp.name)
-            StructureOfIndices[] st = nd.getStructuresOfIndices().clone();
+            StructureOfIndices[] st = token.indicesTypeStructureAndName.structure;
 
             int[] allTypesCounts = st[0].typesCounts;
-            ByteBackedBitArray[] allStates = st[0].states;
+            def ByteBackedBitArray[] allStates = st[0].states;
 
-            types.each { type, ul ->
-                type = type.getType()
+            descriptors.each { descriptor ->
+                def type = descriptor.type.type
                 if (allTypesCounts[type] != 0)
-                    throw new IllegalArgumentException();
-                allTypesCounts[type] = ul[0] + ul[1]
-                allStates[type] = new ByteBackedBitArray(ul[0] + ul[1])
-                for (int i = 0; i < ul[0]; ++i)
+                    throw new IllegalArgumentException()
+                allTypesCounts[type] = descriptor.lower + descriptor.upper
+                allStates[type] = new ByteBackedBitArray(allTypesCounts[type])
+                for (int i = 0; i < descriptor.upper; ++i)
                     allStates[type].set(i)
             }
             st[0] = new StructureOfIndices(allTypesCounts, allStates);
-            types.keySet().each {
-                indicesInsertion.addInsertionRule(CC.getNameManager().mapNameDescriptor(nd.getName(null), st), it)
+            descriptors.each {
+                indicesInsertion.addInsertionRule(CC.getNameManager().mapNameDescriptor(token.name, st),
+                        it.type)
             }
         }
-    }
-
-    public static void setMatrix(String matrix, IndexType matrixType) {
-        setMatrix(matrix, [(matrixType): [1, 1]]);
-    }
-
-    public static void setVector(String vector, IndexType matrixType) {
-        setMatrix(vector, [(matrixType): [1, 0]]);
-    }
-
-    public static void setCoVector(String covector, IndexType matrixType) {
-        setMatrix(covector, [(matrixType): [0, 1]]);
-    }
-
-    public static void setVector(String vector) {
-        setVector(vector, defaultMatrixType)
-    }
-
-    public static void setVectors(String... vectors) {
-        for (vector in vectors)
-            setVector(vector, defaultMatrixType)
-    }
-
-    public static void setCoVectors(String... vectors) {
-        for (vector in vectors)
-            setCoVector(vector, defaultMatrixType)
-    }
-
-    public static void setCoVector(String covector) {
-        setCoVector(covector, defaultMatrixType)
-    }
-
-    public static void setMatrix(String matrix) {
-        setMatrix(matrix, defaultMatrixType)
-    }
-
-    /**
-     * Defines matrix
-     */
-    public static void setMatrices(String... matrices) {
-        matrices.each { setMatrix(it, defaultMatrixType) }
     }
 
     /*

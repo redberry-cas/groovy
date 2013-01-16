@@ -23,10 +23,12 @@
 
 package cc.redberry.groovy
 
-import cc.redberry.core.indices.IndexType
 import org.junit.Test
+
+import static cc.redberry.core.indices.IndexType.Matrix1
+import static cc.redberry.core.indices.IndexType.Matrix2
 import static cc.redberry.groovy.RedberryPhysics.*
-import static cc.redberry.groovy.RedberryStatic.*
+import static cc.redberry.groovy.RedberryStatic.defineMatrix
 import static junit.framework.Assert.assertTrue
 
 /**
@@ -38,9 +40,10 @@ class RedberryPhysicsTest {
     @Test
     public void testDiracTrace1() {
         use(Redberry) {
-            setMatrix('G_a')
+            defineMatrix 'G_a', Matrix1.matrix,
+                    'G_\\alpha', Matrix2.matrix
+
             assertTrue DiracTrace['G_a'] >> 'Tr[G_a*G_b]'.t == '4*g_ab'.t
-            setMatrix('G_\\alpha', IndexType.Matrix2)
             assertTrue DiracTrace['G_\\alpha'] >> 'Tr[G_\\alpha*G_\\beta]'.t == '4*g_\\alpha\\beta'.t
         }
     }
@@ -48,10 +51,10 @@ class RedberryPhysicsTest {
     @Test
     public void testSUNTrace1() {
         use(Redberry) {
-            setMatrix('T_a')
-            assertTrue UnitaryTrace >> 'Tr[T_a*T_b]'.t == '(1/2)*g_{ba}'.t
+            defineMatrix 'T_a', Matrix1.matrix,
+                    'T_A', Matrix2.matrix
 
-            setMatrix('T_A', IndexType.Matrix2)
+            assertTrue UnitaryTrace >> 'Tr[T_a*T_b]'.t == '(1/2)*g_{ba}'.t
             assertTrue UnitaryTrace['T_A', 'f_ABC', 'd_ABC', 'N'] >> 'Tr[T_A*T_B]'.t == '(1/2)*g_{AB}'.t
         }
     }

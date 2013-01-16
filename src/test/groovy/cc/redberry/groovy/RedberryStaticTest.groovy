@@ -25,9 +25,11 @@ package cc.redberry.groovy
 
 import org.junit.Test
 
+import static cc.redberry.core.indices.IndexType.*
 import static cc.redberry.core.tensor.Tensors.addAntiSymmetry
 import static cc.redberry.core.tensor.Tensors.addSymmetry
 import static cc.redberry.groovy.RedberryStatic.*
+import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue
 
 class RedberryStaticTest {
@@ -78,6 +80,29 @@ class RedberryStaticTest {
         use(Redberry) {
             assertTrue Numerator >> '1/a+1/b'.t == '1/a+1/b'.t
             assertTrue Denominator >> '1/a+1/b'.t == '1'.t
+        }
+    }
+
+
+    @Test
+    void testMatrices() throws Exception {
+        use(Redberry) {
+            defineMatrix "A", Matrix1.vector, Matrix2.covector, Matrix3.tensor(2, 2);
+            assertEquals "A^{a'}_{A'}^{\\alpha'\\beta'}_{\\gamma'\\delta'}", "A".t.toString()
+
+            defineMatrix "B", "C", Matrix1.vector, Matrix2.covector, Matrix3.tensor(2, 2);
+            assertEquals "B^{a'}_{A'}^{\\alpha'\\beta'}_{\\gamma'\\delta'}", "B".t.toString()
+            assertEquals "C^{a'}_{A'}^{\\alpha'\\beta'}_{\\gamma'\\delta'}", "C".t.toString()
+
+            defineMatrix "G", Matrix1.vector,
+                    "M", "K", Matrix2.covector, Matrix3.tensor(2, 2),
+                    "O", "T", Matrix4.tensor(3, 3)
+
+            assertEquals 'G^{a\'}', "G".t.toString()
+            assertEquals 'M_{A\'}^{\\alpha\'\\beta\'}_{\\gamma\'\\delta\'}', "M".t.toString()
+            assertEquals 'K_{A\'}^{\\alpha\'\\beta\'}_{\\gamma\'\\delta\'}', "K".t.toString()
+            assertEquals 'O^{\\Gamma\'\\Delta\'\\Theta\'}_{\\Lambda\'\\Xi\'\\Pi\'}', "O".t.toString()
+            assertEquals 'T^{\\Gamma\'\\Delta\'\\Theta\'}_{\\Lambda\'\\Xi\'\\Pi\'}', "T".t.toString()
         }
     }
 }
