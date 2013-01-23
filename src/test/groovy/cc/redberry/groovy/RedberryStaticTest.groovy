@@ -90,11 +90,11 @@ class RedberryStaticTest {
             defineMatrix "A", Matrix1.vector, Matrix2.covector, Matrix3.tensor(2, 2);
             assertEquals "A^{a'}_{A'}^{\\alpha'\\beta'}_{\\gamma'\\delta'}", "A".t.toString()
 
-            defineMatrix "B", "C", Matrix1.vector, Matrix2.covector, Matrix3.tensor(2, 2);
+            defineMatrices "B", "C", Matrix1.vector, Matrix2.covector, Matrix3.tensor(2, 2);
             assertEquals "B^{a'}_{A'}^{\\alpha'\\beta'}_{\\gamma'\\delta'}", "B".t.toString()
             assertEquals "C^{a'}_{A'}^{\\alpha'\\beta'}_{\\gamma'\\delta'}", "C".t.toString()
 
-            defineMatrix "G", Matrix1.vector,
+            defineMatrices "G", Matrix1.vector,
                     "M", "K", Matrix2.covector, Matrix3.tensor(2, 2),
                     "O", "T", Matrix4.tensor(3, 3)
 

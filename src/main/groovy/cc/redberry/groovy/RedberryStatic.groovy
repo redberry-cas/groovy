@@ -190,27 +190,27 @@ class RedberryStatic {
     /**
      * Matrices definition
      */
-    //public static void defineMatrix(Collection<String> tensors, MatrixDescriptor... descriptors) {
-    //    tensors.each { defineMatrix(it, descriptors) }
+    //public static void defineMatrices(Collection<String> tensors, MatrixDescriptor... descriptors) {
+    //    tensors.each { defineMatrices(it, descriptors) }
     //}
 
-    public static void defineMatrix(Object... objs) {
+    public static void defineMatrices(Object... objs) {
         def bufferOfTensors = [], bufferOfDescriptors = [];
         objs.each { obj ->
             if (obj instanceof MatrixDescriptor)
                 bufferOfDescriptors << obj
             else {
                 if (bufferOfDescriptors) {
-                    bufferOfTensors.each { it -> defineMatrix(it, * bufferOfDescriptors) }
+                    bufferOfTensors.each { it -> defineMatrices(it, * bufferOfDescriptors) }
                     bufferOfTensors = []
                     bufferOfDescriptors = []
                 }
                 bufferOfTensors << obj
             }
         }
-        bufferOfTensors.each { it -> defineMatrix(it, * bufferOfDescriptors) }
+        bufferOfTensors.each { it -> defineMatrices(it, * bufferOfDescriptors) }
         //int index = objs.findIndexOf { it instanceof MatrixDescriptor }
-        //objs[0..<index].each { defineMatrix(it, * (objs[index..-1])) }
+        //objs[0..<index].each { defineMatrices(it, * (objs[index..-1])) }
     }
 
     public static void defineMatrix(String tensor, MatrixDescriptor... descriptors) {

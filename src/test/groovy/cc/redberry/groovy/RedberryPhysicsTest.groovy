@@ -28,7 +28,7 @@ import org.junit.Test
 import static cc.redberry.core.indices.IndexType.Matrix1
 import static cc.redberry.core.indices.IndexType.Matrix2
 import static cc.redberry.groovy.RedberryPhysics.*
-import static cc.redberry.groovy.RedberryStatic.defineMatrix
+import static cc.redberry.groovy.RedberryStatic.defineMatrices
 import static junit.framework.Assert.assertTrue
 
 /**
@@ -40,7 +40,7 @@ class RedberryPhysicsTest {
     @Test
     public void testDiracTrace1() {
         use(Redberry) {
-            defineMatrix 'G_a', Matrix1.matrix,
+            defineMatrices 'G_a', Matrix1.matrix,
                     'G_\\alpha', Matrix2.matrix
 
             assertTrue DiracTrace['G_a'] >> 'Tr[G_a*G_b]'.t == '4*g_ab'.t
@@ -51,7 +51,7 @@ class RedberryPhysicsTest {
     @Test
     public void testSUNTrace1() {
         use(Redberry) {
-            defineMatrix 'T_a', Matrix1.matrix,
+            defineMatrices 'T_a', Matrix1.matrix,
                     'T_A', Matrix2.matrix
 
             assertTrue UnitaryTrace >> 'Tr[T_a*T_b]'.t == '(1/2)*g_{ba}'.t

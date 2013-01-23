@@ -115,10 +115,16 @@ public class RedberryPhysics {
 
     static final class GInverseOrderOfMatrices {
 
-        Transformation getAt(IndexType... types) {
+        Transformation getAt(Object... types) {
             List<Transformation> tr = new ArrayList<>();
-            for (IndexType type : types)
-                tr.add(new TrInverseOrderOfMatrices(type));
+
+            for (Object type : types)
+                if (type instanceof IndexType)
+                    tr.add(new TrInverseOrderOfMatrices(type));
+                else if (type instanceof Collection)
+                    for (IndexType type1 : type)
+                        tr.add(new TrInverseOrderOfMatrices(type1));
+
             return new TransformationCollection(tr);
         }
     }
