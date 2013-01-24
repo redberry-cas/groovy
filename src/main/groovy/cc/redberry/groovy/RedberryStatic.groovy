@@ -194,7 +194,7 @@ class RedberryStatic {
     //    tensors.each { defineMatrix(it, descriptors) }
     //}
 
-    public static void defineMatrix(Object... objs) {
+    public static void defineMatrices(Object... objs) {
         def bufferOfTensors = [], bufferOfDescriptors = [];
         objs.each { obj ->
             if (obj instanceof MatrixDescriptor)
