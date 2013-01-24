@@ -28,7 +28,7 @@ import org.junit.Test
 import static cc.redberry.core.indices.IndexType.Matrix1
 import static cc.redberry.core.indices.IndexType.Matrix2
 import static cc.redberry.groovy.RedberryPhysics.*
-import static cc.redberry.groovy.RedberryStatic.defineMatrices
+import static cc.redberry.groovy.RedberryStatic.*
 import static junit.framework.Assert.assertTrue
 
 /**

@@ -127,6 +127,10 @@ public class RedberryPhysics {
 
             return new TransformationCollection(tr);
         }
+
+        Transformation getAt(IndexType type) {
+            new TrInverseOrderOfMatrices(type)
+        }
     }
 
     /*
