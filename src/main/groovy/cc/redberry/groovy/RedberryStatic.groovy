@@ -208,7 +208,7 @@ class RedberryStatic {
                 bufferOfTensors << obj
             }
         }
-        bufferOfTensors.each { it -> defineMatrices(it, * bufferOfDescriptors) }
+        bufferOfTensors.each { it -> defineMatrix(it, * bufferOfDescriptors) }
         //int index = objs.findIndexOf { it instanceof MatrixDescriptor }
         //objs[0..<index].each { defineMatrices(it, * (objs[index..-1])) }
     }
