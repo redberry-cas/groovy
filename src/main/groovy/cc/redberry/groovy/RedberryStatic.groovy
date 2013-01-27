@@ -96,6 +96,12 @@ class RedberryStatic {
             return new DifferentiateTransformation(var);
         }
 
+        Transformation getProperty(String var) {
+            use(Redberry) {
+                return new DifferentiateTransformation(var.t);
+            }
+        }
+
         Transformation getAt(Collection args) {
             use(Redberry) {
                 int i;

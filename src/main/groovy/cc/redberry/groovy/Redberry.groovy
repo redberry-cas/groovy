@@ -63,7 +63,6 @@ class Redberry {
             return new Rational(num.toBigInteger());
     }
 
-
     private static Complex number2Complex(Number num) {
         return new Complex(number2Real(num));
     }
@@ -116,6 +115,26 @@ class Redberry {
             return DefaultGroovyMethods.asType(indices, clazz)
     }
 
+    static Iterator<Integer> iterator(final Indices indices) {
+        def position = 0;
+        new Iterator<Integer>() {
+
+            @Override
+            boolean hasNext() {
+                return position < indices.size()
+            }
+
+            @Override
+            Integer next() {
+                return indices.get(position++)
+            }
+
+            @Override
+            void remove() {
+                throw new UnsupportedOperationException()
+            }
+        }
+    }
 
     static SimpleIndices plus(SimpleIndices indices, toAdd) {
         if (toAdd instanceof String)
@@ -203,6 +222,36 @@ class Redberry {
         new TransformationCollection(transformations)
     }
 
+    static Transformation or(Transformation tr1, Transformation tr2) {
+        def expressions = [];
+        if (tr1 instanceof SubstitutionContainer)
+            expressions.addAll(tr1.expressions)
+        else if (tr1 instanceof Expression)
+            expressions << tr1
+        else throw new IllegalArgumentException()
+
+        if (tr2 instanceof SubstitutionContainer)
+            expressions.addAll(tr2.expressions)
+        else if (tr2 instanceof Expression)
+            expressions << tr2
+        else throw new IllegalArgumentException()
+
+        new SubstitutionContainer(expressions)
+    }
+
+    private static final class SubstitutionContainer implements Transformation {
+        final List expressions;
+
+        SubstitutionContainer(expressions) {
+            this.expressions = expressions
+        }
+
+        @Override
+        Tensor transform(Tensor t) {
+            return new SubstitutionTransformation(false, * expressions).transform(t)
+        }
+    }
+
     private static boolean isCollectionOfType(collection, Class type) {
         for (t in collection)
             if (!type.isAssignableFrom(t.class))
@@ -243,9 +292,13 @@ class Redberry {
         return t;
     }
 
+    /*
+     * Type conversions
+     */
+
     static Object asType(Collection collection, Class clazz) {
-        //if (clazz == Transformation)
-        //    return new TransformationCollection(collection.collect { if (it instanceof String) parse(it) else it })
+        if (clazz == Indices)
+            return IndicesFactory.create(* collection)
         return DefaultGroovyMethods.asType(collection, clazz);
     }
 
@@ -255,9 +308,17 @@ class Redberry {
             return number2Complex(num)
         return DefaultGroovyMethods.asType(num, clazz)
     }
+
+
+    static Object asType(String string, Class clazz) {
+        if (clazz == Tensor)
+            return parse(string);
+        return DefaultGroovyMethods.asType(string, clazz);
+    }
+
     /*
-   * Comparison
-    */
+     * Comparison
+     */
 
     static boolean equals(Tensor a, Tensor b) {
         return TensorUtils.equals(a, b);
@@ -338,16 +399,6 @@ class Redberry {
     }
 
     /*
-    * Type conversions
-    */
-
-    static Object asType(String string, Class clazz) {
-        if (clazz == Tensor)
-            return parse(string);
-        return DefaultGroovyMethods.asType(string, clazz);
-    }
-
-    /*
      * Parse
      */
 
@@ -359,10 +410,6 @@ class Redberry {
         return number2Complex(string)
     }
 
-    static Tensor eq(String string, Tensor tensor) {
-        return expression(parse(string), tensor)
-    }
-
     static Tensor getT(GString string) {
         return parse(string.toString())
     }
@@ -370,4 +417,17 @@ class Redberry {
     static Indices getI(String string) {
         return ParserIndices.parseSimple(string)
     }
+
+    /*
+     * Tensor creation
+     */
+
+    static Tensor eq(String lhs, Tensor rhs) {
+        return expression(parse(lhs), rhs)
+    }
+
+    static Tensor eq(Tensor lhs, Tensor rhs) {
+        return expression(lhs, rhs)
+    }
+
 }
