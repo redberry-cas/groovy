@@ -29,12 +29,12 @@ import cc.redberry.core.tensor.SimpleTensor
 import cc.redberry.core.tensor.Tensor
 import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.TransformationCollection
-import cc.redberry.physics.feyncalc.FeynCalcUtils
-import cc.redberry.physics.feyncalc.TrInverseOrderOfMatrices
+import cc.redberry.physics.feyncalc.*
 import cc.redberry.physics.oneloopdiv.OneLoopCounterterms
 import cc.redberry.physics.oneloopdiv.OneLoopInput
 
 import static cc.redberry.core.tensor.Tensors.parse
+import static cc.redberry.core.tensor.Tensors.parseSimple
 
 /**
  * @author Dmitry Bolotin
@@ -53,61 +53,64 @@ public class RedberryPhysics {
 
     public static final GDiracTrace DiracTrace = new GDiracTrace();
 
-    static final class GDiracTrace implements Transformation {
-        @Override
-        Tensor transform(Tensor t) {
-            return cc.redberry.physics.feyncalc.DiracTrace.trace(t)
-        }
+    static final class GDiracTrace {
 
         Transformation getAt(String gamma) {
             use(Redberry) {
-                return new cc.redberry.physics.feyncalc.DiracTrace(gamma.t);
+                return new DiracTraceTransformation(gamma.t);
             }
         }
 
         Transformation getAt(SimpleTensor gamma) {
-            return new cc.redberry.physics.feyncalc.DiracTrace(gamma);
+            return new DiracTraceTransformation(gamma);
         }
 
         Transformation getAt(Collection args) {
             use(Redberry) {
                 args = args.collect { if (it instanceof String) it.t else it }
-                return new cc.redberry.physics.feyncalc.DiracTrace(* args);
+                return new DiracTraceTransformation(* args);
             }
         }
     }
 
     public static final GUnitaryTrace UnitaryTrace = new GUnitaryTrace();
 
-    static final class GUnitaryTrace implements Transformation {
-        @Override
-        Tensor transform(Tensor t) {
-            return cc.redberry.physics.feyncalc.UnitaryTrace.unitaryTrace(t)
-        }
+    static final class GUnitaryTrace {
 
         Transformation getAt(Collection args) {
             use(Redberry) {
                 args = args.collect { if (it instanceof String) it.t else it }
-                return new cc.redberry.physics.feyncalc.UnitaryTrace(* args);
+                return new UnitaryTraceTransformation(* args);
             }
         }
     }
 
     public static final GLeviCivita LeviCivitaSimplify = new GLeviCivita();
 
-    static final class GLeviCivita implements Transformation {
-        @Override
-        Tensor transform(Tensor t) {
-            use(Redberry) {
-                return cc.redberry.physics.feyncalc.LeviCivitaSimplify.simplifyLeviCivita(t, 'e_abcd'.t)
-            }
+    static final class GLeviCivita {
+
+        LeviCivitaSpace getMinkovski() {
+            return new LeviCivitaSpace(true);
         }
 
-        Transformation getAt(leviCivita) {
-            use(Redberry) {
-                if (leviCivita instanceof String) leviCivita = leviCivita.t
-                return new cc.redberry.physics.feyncalc.LeviCivitaSimplify(leviCivita);
-            }
+        LeviCivitaSpace getEuclidean() {
+            return new LeviCivitaSpace(false);
+        }
+    }
+
+    static final class LeviCivitaSpace {
+        final boolean minkovskiSpace;
+
+        LeviCivitaSpace(boolean minkovskiSpace) {
+            this.minkovskiSpace = minkovskiSpace
+        }
+
+        Transformation getAt(String leviCivita) {
+            return new LeviCivitaSimplifyTransformation(parseSimple(leviCivita), minkovskiSpace);
+        }
+
+        Transformation getAt(SimpleTensor leviCivita) {
+            return new LeviCivitaSimplifyTransformation(leviCivita, minkovskiSpace);
         }
     }
 
@@ -120,16 +123,16 @@ public class RedberryPhysics {
 
             for (Object type : types)
                 if (type instanceof IndexType)
-                    tr.add(new TrInverseOrderOfMatrices(type));
+                    tr.add(new InverseOrderOfMatricesTransformation(type));
                 else if (type instanceof Collection)
                     for (IndexType type1 : type)
-                        tr.add(new TrInverseOrderOfMatrices(type1));
+                        tr.add(new InverseOrderOfMatricesTransformation(type1));
 
             return new TransformationCollection(tr);
         }
 
         Transformation getAt(IndexType type) {
-            new TrInverseOrderOfMatrices(type)
+            new InverseOrderOfMatricesTransformation(type)
         }
     }
 
