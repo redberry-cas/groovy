@@ -62,7 +62,7 @@ class RedberryPhysicsTest {
     @Test
     public void testLeviCivita() {
         use(Redberry) {
-            assertTrue LeviCivitaSimplify.minkovski['e_abcd'] >> 'e_abcd*e^abcd'.t == '-24'.t
+            assertTrue LeviCivitaSimplify.minkowski['e_abcd'] >> 'e_abcd*e^abcd'.t == '-24'.t
         }
     }
 }

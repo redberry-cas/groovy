@@ -43,14 +43,15 @@ import cc.redberry.core.transformations.Transformation
 import cc.redberry.core.transformations.TransformationCollection
 import cc.redberry.core.transformations.substitutions.SubstitutionIterator
 import cc.redberry.core.transformations.substitutions.SubstitutionTransformation
+import cc.redberry.core.utils.IntArray
 import cc.redberry.core.utils.TensorUtils
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 import static cc.redberry.core.tensor.Tensors.*
 
-//import cc.redberry.core.transformations.TransformationCollection
-
 /**
+ * Redberry category.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
@@ -71,39 +72,198 @@ class Redberry {
     * Math operations
     */
 
+    /**
+     * Returns the result of summation of several tensors.
+     *
+     * @param a summand
+     * @param b summand
+     * @return result of summation
+     * @throws cc.redberry.core.tensor.TensorException if tensors have different free indices
+     * @see Tensors#sum(cc.redberry.core.tensor.Tensor ...)
+     */
     static Tensor plus(Tensor a, Tensor b) { Tensors.sum(a, b); }
 
+    /**
+     * Adds {@code b} to {@code a}
+     *
+     * @param a tensor
+     * @param b number
+     * @return {@code a} - {@code b}
+     * @throws cc.redberry.core.tensor.TensorException if a is not scalar
+     * @see Tensors#sum(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
     static Tensor plus(Tensor a, Number b) { Tensors.sum(a, number2Complex(b)); }
 
+    /**
+     * Subtracts {@code b} from {@code a}
+     *
+     * @param a tensor
+     * @param b tensor
+     * @return {@code a} - {@code b}
+     * @throws cc.redberry.core.tensor.TensorException if tensors have different free indices
+     * @see Tensors#subtract(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
     static Tensor minus(Tensor a, Tensor b) { Tensors.subtract(a, b); }
 
+    /**
+     * Subtracts {@code b} from {@code a}
+     *
+     * @param a tensor
+     * @param b number
+     * @return {@code a} - {@code b}
+     * @throws cc.redberry.core.tensor.TensorException if a is not scalar
+     * @see Tensors#subtract(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
     static Tensor minus(Tensor a, Number b) { Tensors.subtract(a, number2Complex(b)); }
 
+    /**
+     * Returns {@code a} divided by {@code b}.
+     *
+     * @param a tensor
+     * @param b scalar tensor
+     * @return {@code a} divided by {@code b}.
+     * @throws IllegalArgumentException if b is not scalar
+     * @see Tensors#divide(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
     static Tensor div(Tensor a, Tensor b) { Tensors.divide(a, b); }
 
+    /**
+     * Divides tensor on specified number
+     * @param a tensor
+     * @param b number
+     * @return the result
+     * @see Tensors#divide(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
     static Tensor div(Tensor a, Number b) { Tensors.divide(a, number2Complex(b)); }
 
+    /**
+     * Returns result of multiplication of specified tensors taking care about
+     * all conflicting dummy indices in factors. Einstein notation assumed.
+     *
+     * @param a factor
+     * @param b factor
+     * @return result of multiplication
+     * @throws InconsistentIndicesException if there is indices clash
+     * @see Tensors#multiplyAndRenameConflictingDummies(cc.redberry.core.tensor.Tensor ...)
+     */
     static Tensor multiply(Tensor a, Tensor b) { multiplyAndRenameConflictingDummies(a, b); }
 
+    /**
+     * Multiplies tensor on number
+     * @param a tensor
+     * @param b number
+     * @return the result
+     * @see Tensors#multiply(cc.redberry.core.tensor.Tensor ...)
+     */
     static Tensor multiply(Tensor a, Number b) { Tensors.multiply(a, number2Complex(b)); }
 
+    /**
+     * Power function. Returns tensor raised to specified power.
+     *
+     * @param a base
+     * @param b power
+     * @return result of argument exponentiation
+     * @throws IllegalArgumentException if argument or power is not scalar
+     * @see Tensors#pow(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
+    static Tensor power(Tensor a, Tensor b) { Tensors.pow(a, b); }
+
+    /**
+     * Power function. Returns tensor raised to specified power.
+     *
+     * @param a base
+     * @param b power
+     * @return result of argument exponentiation
+     * @throws IllegalArgumentException if argument or power is not scalar
+     * @see Tensors#pow(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
+    static Tensor power(Tensor a, Number b) { Tensors.pow(a, number2Complex(b)); }
+
+    /**
+     * Multiplies specified tensor by minus one.
+     *
+     * @param a tensor to be negotiated
+     * @return tensor negate to specified one
+     * @see Tensors#negate(cc.redberry.core.tensor.Tensor)
+     */
     static Tensor negative(Tensor a) { negate(a); }
 
+    /**
+     * Returns tensor
+     * @param a tensor
+     * @return tensor
+     */
     static Tensor positive(Tensor a) { a; }
 
-    static Tensor getAt(Tensor a, int position) { a.get(position); }
+    /**
+     * Returns element at i-th position.
+     *
+     * @param a tensor
+     * @param i position
+     * @return element at i-th position
+     * @throws IndexOutOfBoundsException if {@code i < 0} or {@code i >= size()}
+     * @see Tensor#get(int)
+     */
+    static Tensor getAt(Tensor a, int i) { a.get(i); }
 
-    static Tensor getAt(Tensor a, int ... position) {
-        //todo
-        return a.get(position);
+    /**
+     * Returns element at specified positions in expression-tree
+     * @param a tensor
+     * @param positions positions in tree
+     * @return element at specified positions in expression-tree
+     * @see Tensor#get(int)
+     */
+    static Tensor getAt(Tensor a, Collection positions) {
+        for (int i : positions)
+            a = a.get(i)
+        return a;
+    }
+
+    /**
+     * Retrieves several sub-tensors from current tensor. This function is
+     * faster than sequential invocations of {@link Tensor#get(int)} method.
+     *
+     * @param a tensor
+     * @param range integer range
+     * @return array with retrieved tensors
+     * @see Tensor#getRange(int, int)
+     */
+    static Tensor[] getAt(Tensor a, IntRange range) {
+        int from = range.fromInt, to = range.toInt;
+        if (from == 0 && to == a.size())
+            return a.toArray();
+        return a.getRange(from, to);
     }
 
     /*
      * Indices
      */
 
+    /**
+     * Returns the index at the specified position in indices
+     *
+     * @param indices indices
+     * @param position position of the index
+     * @return the index at the specified position in this
+     *         <code>Indices</code>
+     * @throws IndexOutOfBoundsException - if the index is out of range (index <
+     *                                   0 || index >= size())
+     * @see Indices#get(int)
+     */
     static int getAt(Indices indices, int position) { indices.get(position) }
 
+    /**
+     * Returns the index of the specified type at the
+     * specified position in indices
+     *
+     * @param indices indices
+     * @param type IndexType
+     * @param position position of the index to return
+     * @return the index of the specified type at the
+     *         specified position in this <code>Indices</code>
+     * @throws IndexOutOfBoundsException - if the index is out of range
+     * @see Indices#get(cc.redberry.core.indices.IndexType, int)
+     */
     static int getAt(Indices indices, IndexType type, int position) { indices.get(type, position) }
 
     static Indices asType(int[] indices, Class clazz) {
@@ -115,6 +275,20 @@ class Redberry {
             return DefaultGroovyMethods.asType(indices, clazz)
     }
 
+    static Indices asType(IntArray indices, Class clazz) {
+        if (clazz == SimpleIndices)
+            return IndicesFactory.createSimple(null, indices.copy())
+        else if (clazz == Indices)
+            return IndicesFactory.create(indices.copy())
+        else
+            return DefaultGroovyMethods.asType(indices, clazz)
+    }
+
+    /**
+     * Iterator over single indices integers in {@code indices} object
+     * @param indices indices
+     * @return iterator over integers
+     */
     static Iterator<Integer> iterator(final Indices indices) {
         def position = 0;
         new Iterator<Integer>() {
@@ -136,6 +310,14 @@ class Redberry {
         }
     }
 
+    /**
+     * SimpleIndices concatenation
+     * @param indices simple indices
+     * @param toAdd to add
+     * @return new indices
+     * @see SimpleIndicesBuilder
+     * @throws InconsistentIndicesException if there was more then one same index (with same names, types and states)
+     */
     static SimpleIndices plus(SimpleIndices indices, toAdd) {
         if (toAdd instanceof String)
             toAdd = ParserIndices.parseSimple(toAdd);
@@ -147,6 +329,14 @@ class Redberry {
             throw new IllegalArgumentException()
     }
 
+    /**
+     * Indices concatenation
+     * @param indices indices
+     * @param toAdd to add
+     * @return new indices
+     * @see IndicesBuilder
+     * @throws InconsistentIndicesException if there was more then one same index (with same names, types and states)
+     */
     static Indices plus(Indices indices, toAdd) {
         if (toAdd instanceof String)
             toAdd = ParserIndices.parseSimple(toAdd);
@@ -158,39 +348,76 @@ class Redberry {
             throw new IllegalArgumentException()
     }
 
+    static boolean equals(SimpleIndices a, SimpleIndices b) {
+        return Arrays.equals(a.allIndices.copy(), b.allIndices.copy())
+    }
+
     /*
     * Tensor traversing
     */
-
-    static Tensor eachInTree(Tensor t, Object guide, Closure<Tensor> closure) {
+    /**
+     * Expression-tree traversal parent-after-child
+     * @param t expression
+     * @param closure do stuff
+     * @param guide traverse guide
+     * @see FromChildToParentIterator
+     */
+    static void parentAfterChild(Tensor t, Object guide, Closure<Tensor> closure) {
         FromChildToParentIterator iterator = new FromChildToParentIterator(t, guide);
         Tensor c;
         while ((c = iterator.next()) != null)
             closure.call(c);
-        return iterator.result();
     }
 
-    static Tensor eachInTreeReverse(Tensor t, TraverseGuide guide, Closure<Tensor> closure) {
+    /**
+     * Expression-tree traversal parent-before-child
+     * @param t expression
+     * @param closure do stuff
+     * @param guide traverse guide
+     * @see FromParentToChildIterator
+     * @see TraverseGuide
+     */
+    static void parentBeforeChild(Tensor t, TraverseGuide guide, Closure<Tensor> closure) {
         FromParentToChildIterator iterator = new FromParentToChildIterator(t, guide);
         Tensor c;
         while ((c = iterator.next()) != null)
             closure.call(c);
-        return iterator.result();
     }
 
-    static Tensor eachInTree(Tensor t, Closure<Tensor> closure) {
-        return eachInTree(t, TraverseGuide.ALL, closure)
+    /**
+     * Expression-tree traversal parent-after-child
+     * @param t expression
+     * @param closure do stuff
+     * @see FromChildToParentIterator
+     */
+    static void parentAfterChild(Tensor t, Closure<Tensor> closure) {
+        parentAfterChild(t, TraverseGuide.ALL, closure)
     }
 
-    static Tensor eachInTreeReverse(Tensor t, Closure<Tensor> closure) {
-        return eachInTreeReverse(t, TraverseGuide.ALL, closure)
+    /**
+     * Expression-tree traversal parent-before-child
+     * @param t expression
+     * @param closure do stuff
+     * @see FromParentToChildIterator
+     */
+    static void parentBeforeChild(Tensor t, Closure<Tensor> closure) {
+        parentBeforeChild(t, TraverseGuide.ALL, closure)
     }
 
     /*
     * Tree modification
     */
 
-    static Tensor transformEachInTree(Tensor t, TraverseGuide guide, Closure<Tensor> closure) {
+    /**
+     * Expression-tree traversal and modification
+     * @param t expression
+     * @param closure do stuff
+     * @param guide traverse guide
+     * @return the result
+     * @see SubstitutionIterator
+     * @see TraverseGuide
+     */
+    static Tensor transformParentAfterChild(Tensor t, TraverseGuide guide, Closure<Tensor> closure) {
         SubstitutionIterator iterator = new SubstitutionIterator(t, guide);
         Tensor c;
         while ((c = iterator.next()) != null)
@@ -199,14 +426,35 @@ class Redberry {
         return iterator.result();
     }
 
-    static Tensor transformEachInTree(Tensor t, Closure<Tensor> closure) {
-        return transformEachInTree(t, TraverseGuide.ALL, closure);
+    /**
+     * Expression-tree traversal and modification
+     * @param t expression
+     * @param closure do stuff
+     * @return the result
+     * @see SubstitutionIterator
+     */
+    static Tensor transformParentAfterChild(Tensor t, Closure<Tensor> closure) {
+        return transformParentAfterChild(t, TraverseGuide.ALL, closure);
     }
+
+//todo implement
+//    static Tensor transformParentBeforeChild(Tensor t, TraverseGuide guide, Closure<Tensor> closure) {
+//    }
+//
+//    static Tensor transformParentBeforeChild(Tensor t, Closure<Tensor> closure) {
+//        return transformParentBeforeChild(t, TraverseGuide.ALL, closure);
+//    }
 
     /*
     * Transformations
     */
 
+    /**
+     * Joins two transformations in a single one, which will apply both transformations sequentially
+     * @param tr1 transformation
+     * @param tr2 transformation
+     * @return joined transformation, which will apply both transformations sequentially
+     */
     static Transformation and(Transformation tr1, Transformation tr2) {
         def transformations = [];
         if (tr1 instanceof TransformationCollection)
@@ -222,6 +470,13 @@ class Redberry {
         new TransformationCollection(transformations)
     }
 
+    /**
+     * Joins two substitutions in a single one, which will apply both substitutions "simultaneously"
+     * @param tr1 substitution
+     * @param tr2 substitution
+     * @return joined substitution, which will apply both substitutions "simultaneously"
+     * @see SubstitutionTransformation
+     */
     static Transformation or(Transformation tr1, Transformation tr2) {
         def expressions = [];
         if (tr1 instanceof SubstitutionContainer)
@@ -259,14 +514,35 @@ class Redberry {
         return true;
     }
 
+    /**
+     * Applies transformation to tensor
+     * @param tensor tensor
+     * @param transformation transformation
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     */
     static Tensor rightShift(Transformation transformation, Tensor tensor) {
         return transformation.transform(tensor);
     }
 
+    /**
+     * Applies substitution to tensor
+     * @param tensor tensor
+     * @param transformation string representation of substitution
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     */
     static Tensor rightShift(String transformation, Tensor tensor) {
         return parseExpression(transformation).transform(tensor);
     }
 
+    /**
+     * Applies collection of transformations to tensor
+     * @param tensor tensor
+     * @param transformations collection of transformations
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     */
     static Tensor rightShift(Collection transformations, Tensor tensor) {
 
         transformations = transformations.collect { if (it instanceof String) parse(it); else it; }
@@ -279,10 +555,24 @@ class Redberry {
         return t;
     }
 
+    /**
+     * Applies transformation to tensor
+     * @param tensor tensor
+     * @param transformation transformation
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     */
     static Tensor leftShift(Tensor tensor, Transformation transformation) {
         return transformation.transform(tensor);
     }
 
+    /**
+     * Applies collection of transformations to tensor
+     * @param tensor tensor
+     * @param transformations collection of transformations
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     */
     static Tensor leftShift(Tensor tensor, Collection<Transformation> transformations) {
         if (isCollectionOfType(transformations, Expression))
             return new SubstitutionTransformation(transformations as Expression[]).transform(tensor);
@@ -317,9 +607,16 @@ class Redberry {
     }
 
     /*
-     * Comparison
+     * Tensor comparison
      */
 
+    /**
+     * Returns {@code true} if tensors are mathematically (not programmatically) equal
+     * @param a tensor
+     * @param b tensor
+     * @return {@code true} if tensors are mathematically (not programmatically) equal, {@code false} otherwise
+     * @see TensorUtils#equals(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     */
     static boolean equals(Tensor a, Tensor b) {
         return TensorUtils.equals(a, b);
     }
@@ -328,18 +625,16 @@ class Redberry {
         return new IndexMappingBufferMappingsPort(IndexMappings.createPort(a, b));
     }
 
-    static boolean asBoolean(MappingsPort port) {
-        return port.take() != null;
-    }
-
+    /**
+     * Each mapping in mappings
+     *
+     * @param port mappings port
+     * @param closure do stuff
+     */
     static void each(MappingsPort port, Closure closure) {
         IndexMappingBuffer buffer;
         while ((buffer = port.take()) != null)
             closure.call(buffer);
-    }
-
-    static IndexMappingBuffer positive(MappingsPort port, Closure closure) {
-        return port.take();
     }
 
     static final class IndexMappingBufferMappingsPort implements IndexMappingBuffer, MappingsPort {
@@ -374,18 +669,48 @@ class Redberry {
      * Matrix descriptors
      */
 
+    /**
+     * Covector with respect to specified type
+     * @param type index type
+     * @return matrix descriptor of covector with specified type
+     * @see IndexType
+     * @see cc.redberry.groovy.RedberryStatic#defineMatrices(java.lang.Object [])
+     */
     static MatrixDescriptor getCovector(IndexType type) {
         return new MatrixDescriptor(type, 0, 1);
     }
 
+    /**
+     * Vector with respect to specified type
+     * @param type index type
+     * @return matrix descriptor of vector with specified type
+     * @see IndexType
+     * @see cc.redberry.groovy.RedberryStatic#defineMatrices(java.lang.Object [])
+     */
     static MatrixDescriptor getVector(IndexType type) {
         return new MatrixDescriptor(type, 1, 0);
     }
 
+    /**
+     * Matrix with respect to specified type
+     * @param type index type
+     * @return matrix descriptor of matrix with specified type
+     * @see IndexType
+     * @see cc.redberry.groovy.RedberryStatic#defineMatrices(java.lang.Object [])
+     */
     static MatrixDescriptor getMatrix(IndexType type) {
         return new MatrixDescriptor(type, 1, 1);
     }
 
+    /**
+     * Generalized matrix with respect to specified type with specified number of upper and lower indices
+     * @param type index type
+     * @param upper number of upper indices
+     * @param lower number of lower indices
+     * @return matrix descriptor of generalized matrix with specified type
+     * @see IndexType
+     * @see cc.redberry.groovy.RedberryStatic#defineMatrices(java.lang.Object [])
+     */
     static MatrixDescriptor tensor(IndexType type, int upper, int lower) {
         return new MatrixDescriptor(type, upper, lower);
     }
@@ -394,6 +719,12 @@ class Redberry {
     * Apply mappings of indices. E.g. 'a -> b, _a -> ^b, ....' >> tensor
     */
 
+    /**
+     * Applies mapping rule to tensor
+     * @param buffer mapping of indices
+     * @param tensor tensor
+     * @return the result
+     */
     static Tensor rightShift(IndexMappingBuffer buffer, Tensor tensor) {
         return ApplyIndexMapping.applyIndexMapping(tensor, buffer);
     }
@@ -402,19 +733,67 @@ class Redberry {
      * Parse
      */
 
+    /**
+     * Parse string to tensor
+     * @param string string representation of tensor
+     * @return tensor
+     * @see Tensor
+     * @see Tensors#parse(java.lang.String)
+     * @throws cc.redberry.core.parser.ParserException
+     *          if expression does not satisfy correct Redberry
+     *          input notation for tensors
+     *
+     */
     static Tensor getT(String string) {
         return parse(string)
     }
 
-    static Tensor getT(Number string) {
-        return number2Complex(string)
-    }
-
+    /**
+     * Parse string to tensor
+     * @param string string representation of tensor
+     * @return tensor
+     * @see Tensor
+     * @see Tensors#parse(java.lang.String)
+     * @throws cc.redberry.core.parser.ParserException
+     *          if expression does not satisfy correct Redberry
+     *          input notation for tensors
+     */
     static Tensor getT(GString string) {
         return parse(string.toString())
     }
 
+    /**
+     * Gives Redberry representation of number
+     * @param number number
+     * @return Redberry representation of number
+     * @see Complex
+     */
+    static Tensor getT(Number number) {
+        return number2Complex(number)
+    }
+
+    /**
+     * Parse string to indices
+     * @param string string representation of indices
+     * @return indices
+     * @see Indices
+     * @see ParserIndices#parseSimple(java.lang.String)
+     * @see IndicesFactory#create(cc.redberry.core.indices.Indices)
+     * @throws IllegalArgumentException if string does not represent correct indices object.
+     */
     static Indices getI(String string) {
+        return IndicesFactory.create(ParserIndices.parseSimple(string))
+    }
+
+    /**
+     * Parse string to simple indices
+     * @param string string representation of simple indices
+     * @return simple indices
+     * @see SimpleIndices
+     * @see ParserIndices#parseSimple(java.lang.String)
+     * @throws IllegalArgumentException if string does not represent correct indices object.
+     */
+    static SimpleIndices getSi(String string) {
         return ParserIndices.parseSimple(string)
     }
 
@@ -422,10 +801,30 @@ class Redberry {
      * Tensor creation
      */
 
+    /**
+     * Creates {@link Expression} from given l.h.s. and r.h.s.
+     * @param lhs l.h.s. of the expression
+     * @param rhs r.h.s. of the expression
+     * @return expression
+     * @see Tensors#parse(java.lang.String)
+     * @see Tensors#expression(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     * @throws cc.redberry.core.parser.ParserException
+     *          if expression does not satisfy correct Redberry
+     *          input notation for tensors
+     * @throws IllegalArgumentException if l.h.s. free indices are not matches r.h.s. free indices
+     */
     static Tensor eq(String lhs, Tensor rhs) {
         return expression(parse(lhs), rhs)
     }
 
+    /**
+     * Creates {@link Expression} from given l.h.s. and r.h.s.
+     * @param lhs l.h.s. of the expression
+     * @param rhs r.h.s. of the expression
+     * @return expression
+     * @see Tensors#expression(cc.redberry.core.tensor.Tensor, cc.redberry.core.tensor.Tensor)
+     * @throws IllegalArgumentException if l.h.s. free indices are not matches r.h.s. free indices
+     */
     static Tensor eq(Tensor lhs, Tensor rhs) {
         return expression(lhs, rhs)
     }

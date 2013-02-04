@@ -85,11 +85,23 @@ public class RedberryPhysics {
         }
     }
 
+    public static final GUnitarySimplify UnitarySimplify = new GUnitarySimplify();
+
+    static final class GUnitarySimplify {
+
+        Transformation getAt(Collection args) {
+            use(Redberry) {
+                args = args.collect { if (it instanceof String) it.t else it }
+                return new UnitarySimplifyTransformation(* args);
+            }
+        }
+    }
+
     public static final GLeviCivita LeviCivitaSimplify = new GLeviCivita();
 
     static final class GLeviCivita {
 
-        LeviCivitaSpace getMinkovski() {
+        LeviCivitaSpace getMinkowski() {
             return new LeviCivitaSpace(true);
         }
 
@@ -99,18 +111,18 @@ public class RedberryPhysics {
     }
 
     static final class LeviCivitaSpace {
-        final boolean minkovskiSpace;
+        final boolean minkowskiSpace;
 
-        LeviCivitaSpace(boolean minkovskiSpace) {
-            this.minkovskiSpace = minkovskiSpace
+        LeviCivitaSpace(boolean minkowskiSpace) {
+            this.minkowskiSpace = minkowskiSpace
         }
 
         Transformation getAt(String leviCivita) {
-            return new LeviCivitaSimplifyTransformation(parseSimple(leviCivita), minkovskiSpace);
+            return new LeviCivitaSimplifyTransformation(parseSimple(leviCivita), minkowskiSpace);
         }
 
         Transformation getAt(SimpleTensor leviCivita) {
-            return new LeviCivitaSimplifyTransformation(leviCivita, minkovskiSpace);
+            return new LeviCivitaSimplifyTransformation(leviCivita, minkowskiSpace);
         }
     }
 

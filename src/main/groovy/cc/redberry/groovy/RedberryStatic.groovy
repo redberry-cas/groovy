@@ -45,7 +45,6 @@ import cc.redberry.core.utils.ByteBackedBitArray
 import static cc.redberry.groovy.Redberry.number2Complex
 
 class RedberryStatic {
-
     /**
      * Expands out products and positive integer powers.
      */
@@ -150,7 +149,6 @@ class RedberryStatic {
      */
     public static final Transformation EliminateFromSymmetries = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES;
 
-    //todo incorporate with Factor
     /**
      * Puts terms in a sum over a common denominator, and cancels factors in the result.
      */
@@ -186,9 +184,7 @@ class RedberryStatic {
      */
     public static final Transformation Factor = FactorTransformation.FACTOR;
 
-    public static IndexType defaultMatrixType = IndexType.Matrix1
-
-    private static GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
+    static GeneralIndicesInsertion indicesInsertion = new GeneralIndicesInsertion();
     static {
         CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
     }
@@ -196,9 +192,6 @@ class RedberryStatic {
     /**
      * Matrices definition
      */
-    //public static void defineMatrices(Collection<String> tensors, MatrixDescriptor... descriptors) {
-    //    tensors.each { defineMatrices(it, descriptors) }
-    //}
 
     public static void defineMatrices(Object... objs) {
         def bufferOfTensors = [], bufferOfDescriptors = [];
