@@ -23,4 +23,18 @@ class RedberryTest {
             assert or >> t == '2*x + 2*y'.t
         }
     }
+
+    @Test
+    public void testGet() {
+        use(Redberry) {
+            def a = 'Sin[Sin[x]*Sin[y]]'.t
+            assert a[0] == 'Sin[x]*Sin[y]'.t
+            assert (a[0, 0, 0] == 'x'.t || a[0, 0, 0] == 'y'.t)
+
+            a = 'a*b*c*F_mn*G_ab'.t
+            assert a[0..3] == ('a*b*c'.t.toArray() as List)
+            assert a[0..5] == (a.toArray() as List)
+            assert a[3..5] == ('F_mn*G_ab'.t.toArray() as List)
+        }
+    }
 }

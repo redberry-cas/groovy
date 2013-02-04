@@ -54,7 +54,7 @@ class RedberryPhysicsTest {
             defineMatrices 'T_a', Matrix1.matrix,
                     'T_A', Matrix2.matrix
 
-            assertTrue UnitaryTrace >> 'Tr[T_a*T_b]'.t == '(1/2)*g_{ba}'.t
+            assertTrue UnitaryTrace['T_a', 'f_abc', 'd_abc', 'N'] >> 'Tr[T_a*T_b]'.t == '(1/2)*g_{ba}'.t
             assertTrue UnitaryTrace['T_A', 'f_ABC', 'd_ABC', 'N'] >> 'Tr[T_A*T_B]'.t == '(1/2)*g_{AB}'.t
         }
     }
@@ -62,7 +62,7 @@ class RedberryPhysicsTest {
     @Test
     public void testLeviCivita() {
         use(Redberry) {
-            assertTrue LeviCivitaSimplify >> 'e_abcd*e^abcd'.t == '-24'.t
+            assertTrue LeviCivitaSimplify.minkowski['e_abcd'] >> 'e_abcd*e^abcd'.t == '-24'.t
         }
     }
 }
