@@ -37,11 +37,20 @@ import static cc.redberry.core.tensor.Tensors.parse
 import static cc.redberry.core.tensor.Tensors.parseSimple
 
 /**
+ * Groovy facade for transformations and utility methods from redberry-physics.
+ *
  * @author Dmitry Bolotin
  * @author Stanislav Poslavsky
  */
 public class RedberryPhysics {
 
+    /**
+     * Returns mandelstam and mass shell substitutions following from the provided map
+     * of "momentum - mass of particle".
+     *
+     * @param momentumMasses "momentum - mass of particle"
+     * @return resulting substitutions
+     */
     public static Transformation setMandelstam(Map<String, String> momentumMasses) {
         if (momentumMasses.size() != 4)
             throw new IllegalArgumentException();
@@ -51,6 +60,10 @@ public class RedberryPhysics {
         return new TransformationCollection(FeynCalcUtils.setMandelstam(result));
     }
 
+    /**
+     * Calculates trace of Dirac matrices in four dimensions.
+     * @see DiracTraceTransformation
+     */
     public static final GDiracTrace DiracTrace = new GDiracTrace();
 
     static final class GDiracTrace {
@@ -73,6 +86,10 @@ public class RedberryPhysics {
         }
     }
 
+    /**
+     * Calculates trace of unitary matrices
+     * @see UnitaryTraceTransformation
+     */
     public static final GUnitaryTrace UnitaryTrace = new GUnitaryTrace();
 
     static final class GUnitaryTrace {
@@ -85,6 +102,10 @@ public class RedberryPhysics {
         }
     }
 
+    /**
+     * Simplifies combinations of unitary matrices
+     * @see UnitarySimplifyTransformation
+     */
     public static final GUnitarySimplify UnitarySimplify = new GUnitarySimplify();
 
     static final class GUnitarySimplify {
@@ -97,14 +118,25 @@ public class RedberryPhysics {
         }
     }
 
+    /**
+     * Simplifies combinations of Levi-Civita tensors.
+     * @see LeviCivitaSimplifyTransformation
+     */
     public static final GLeviCivita LeviCivitaSimplify = new GLeviCivita();
 
     static final class GLeviCivita {
 
+        /**
+         * Simplifies in Minkowski space
+         * @return transformation in Minkowski space
+         */
         LeviCivitaSpace getMinkowski() {
             return new LeviCivitaSpace(true);
         }
-
+        /**
+         * Simplifies in Euclidean space
+         * @return transformation in Euclidean space
+         */
         LeviCivitaSpace getEuclidean() {
             return new LeviCivitaSpace(false);
         }
@@ -126,6 +158,10 @@ public class RedberryPhysics {
         }
     }
 
+    /**
+     * Inverse matrices of specified matrix type.
+     * @see InverseOrderOfMatricesTransformation
+     */
     public static final GInverseOrderOfMatrices InverseOrderOfMatrices = new GInverseOrderOfMatrices();
 
     static final class GInverseOrderOfMatrices {
@@ -152,6 +188,28 @@ public class RedberryPhysics {
      * One-loop calculations
      */
 
+    /**
+     * Calculates one-loop counterterms of second order operator.
+     *
+     * @param KInv inverse of {@code Kn} tensor. The input
+     *                      expression should be in the form {@code KINV^{...}_{...} = ...}.
+     * @param K tensor {@code K} in the form {@code K^{...}_{...} = ....}.
+     * @param S tensor {@code S}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     * {@code S^{...}_{...} = 0}.
+     * @param W tensor {@code W} in the form {@code W^{...}_{...} = ....}.
+     * @param F tensor {@code F} in the form {@code F^{...}_{...} = ....}.
+     * @throws IllegalArgumentException if {@code operatorOrder} is not eqaul to 2 or 4
+     * @throws IllegalArgumentException if {@code S} or {@code N} are not zeroed
+     * @throws IllegalArgumentException if some of the input tensors have name different
+     *                                  from the specified
+     * @throws IllegalArgumentException if indices number of some of the input tensors
+     *                                  does not corresponds to the actual {@code operatorOrder}
+     * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     * @see OneLoopInput
+     * @see OneLoopCounterterms
+     */
     public static OneLoopCounterterms oneloopdiv2(Expression KInv,
                                                   Expression K,
                                                   Expression S,
@@ -161,6 +219,29 @@ public class RedberryPhysics {
         return OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * Calculates one-loop counterterms of second order operator.
+     *
+     * @param KInv inverse of {@code Kn} tensor. The input
+     *                      expression should be in the form {@code KINV^{...}_{...} = ...}.
+     * @param K tensor {@code K} in the form {@code K^{...}_{...} = ....}.
+     * @param S tensor {@code S}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     * {@code S^{...}_{...} = 0}.
+     * @param W tensor {@code W} in the form {@code W^{...}_{...} = ....}.
+     * @param F tensor {@code F} in the form {@code F^{...}_{...} = ....}.
+     * @param transformation additional background conditions, such as anti de Sitter etc.
+     * @throws IllegalArgumentException if {@code operatorOrder} is not eqaul to 2 or 4
+     * @throws IllegalArgumentException if {@code S} or {@code N} are not zeroed
+     * @throws IllegalArgumentException if some of the input tensors have name different
+     *                                  from the specified
+     * @throws IllegalArgumentException if indices number of some of the input tensors
+     *                                  does not corresponds to the actual {@code operatorOrder}
+     * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     * @see OneLoopInput
+     * @see OneLoopCounterterms
+     */
     public static OneLoopCounterterms oneloopdiv2(Expression KInv,
                                                   Expression K,
                                                   Expression S,
@@ -171,7 +252,36 @@ public class RedberryPhysics {
         return OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
-
+    /**
+     * Calculates one-loop countertemrs of the fourth order operator
+     *
+     * @param KInv inverse of {@code Kn} tensor. The input
+     *                      expression should be in the form {@code KINV^{...}_{...} = ...}.
+     * @param K tensor {@code K} in the form {@code K^{...}_{...} = ....}.
+     * @param S tensor {@code S}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     * {@code S^{...}_{...} = 0}.
+     * @param W tensor {@code W} in the form {@code W^{...}_{...} = ....}.
+     * @param N tensor {@code N}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     * {@code N^{...}_{...} = 0}. <b>Note:</b> if
+     * {@code operatorOrder = 2} this param should be {@code null}.
+     * @param M tensor {@code M} in the form {@code M^{...}_{...} = ....}.
+     *                      <b>Note:</b> if {@code operatorOrder = 2} this param
+     *                      should be {@code null}                                    .
+     * @param F tensor {@code F} in the form {@code F^{...}_{...} = ....}.
+     * @throws IllegalArgumentException if {@code operatorOrder} is not eqaul to 2 or 4
+     * @throws IllegalArgumentException if {@code S} or {@code N} are not zeroed
+     * @throws IllegalArgumentException if some of the input tensors have name different
+     *                                  from the specified
+     * @throws IllegalArgumentException if indices number of some of the input tensors
+     *                                  does not corresponds to the actual {@code operatorOrder}
+     * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     * @see OneLoopInput
+     * @see OneLoopCounterterms
+     */
     public static OneLoopCounterterms oneloopdiv4(Expression KInv,
                                                   Expression K,
                                                   Expression S,
@@ -183,6 +293,37 @@ public class RedberryPhysics {
         return OneLoopCounterterms.calculateOneLoopCounterterms(input);
     }
 
+    /**
+     * Calculates one-loop countertemrs of the fourth order operator
+     *
+     * @param KInv inverse of {@code Kn} tensor. The input
+     *                      expression should be in the form {@code KINV^{...}_{...} = ...}.
+     * @param K tensor {@code K} in the form {@code K^{...}_{...} = ....}.
+     * @param S tensor {@code S}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     * {@code S^{...}_{...} = 0}.
+     * @param W tensor {@code W} in the form {@code W^{...}_{...} = ....}.
+     * @param N tensor {@code N}. Since odd terms in operator expansion
+     *                      is not supported yet, this tensor should be zeroed, so
+     *                      the r.h.s. of the expression should be always zero:
+     * {@code N^{...}_{...} = 0}. <b>Note:</b> if
+     * {@code operatorOrder = 2} this param should be {@code null}.
+     * @param M tensor {@code M} in the form {@code M^{...}_{...} = ....}.
+     *                      <b>Note:</b> if {@code operatorOrder = 2} this param
+     *                      should be {@code null}                                    .
+     * @param F tensor {@code F} in the form {@code F^{...}_{...} = ....}.
+     * @param transformation additional background conditions, such as anti de Sitter etc.
+     * @throws IllegalArgumentException if {@code operatorOrder} is not eqaul to 2 or 4
+     * @throws IllegalArgumentException if {@code S} or {@code N} are not zeroed
+     * @throws IllegalArgumentException if some of the input tensors have name different
+     *                                  from the specified
+     * @throws IllegalArgumentException if indices number of some of the input tensors
+     *                                  does not corresponds to the actual {@code operatorOrder}
+     * @throws IllegalArgumentException if indices of l.h.s. of input expressions contains non Greek lowercase indices.
+     * @see OneLoopInput
+     * @see OneLoopCounterterms
+     */
     public static OneLoopCounterterms oneloopdiv4(Expression KInv,
                                                   Expression K,
                                                   Expression S,

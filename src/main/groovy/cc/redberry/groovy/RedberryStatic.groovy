@@ -24,13 +24,11 @@
 package cc.redberry.groovy
 
 import cc.redberry.core.context.CC
-import cc.redberry.core.indices.IndexType
 import cc.redberry.core.indices.StructureOfIndices
 import cc.redberry.core.parser.ParseTokenSimpleTensor
 import cc.redberry.core.parser.preprocessor.GeneralIndicesInsertion
 import cc.redberry.core.tensor.SimpleTensor
 import cc.redberry.core.tensor.Tensor
-import cc.redberry.core.tensor.Tensors
 import cc.redberry.core.transformations.*
 import cc.redberry.core.transformations.expand.ExpandAllTransformation
 import cc.redberry.core.transformations.expand.ExpandDenominatorTransformation
@@ -42,11 +40,16 @@ import cc.redberry.core.transformations.fractions.GetNumeratorTransformation
 import cc.redberry.core.transformations.fractions.TogetherTransformation
 import cc.redberry.core.utils.ByteBackedBitArray
 
-import static cc.redberry.groovy.Redberry.number2Complex
-
+/**
+ * Groovy facade for Redberry transformations and utility methods.
+ *
+ * @author Dmitry Bolotin
+ * @author Stanislav Poslavsky
+ */
 class RedberryStatic {
     /**
      * Expands out products and positive integer powers.
+     * @see ExpandTransformation
      */
     public static final Transformation Expand = new Transformation() {
         @Override
@@ -57,6 +60,7 @@ class RedberryStatic {
 
     /**
      * Expands out all products and integer powers in any part of expression.
+     * @see ExpandAllTransformation
      */
     public static final Transformation ExpandAll = new Transformation() {
         @Override
@@ -67,6 +71,7 @@ class RedberryStatic {
 
     /**
      * Expands out products and powers that appear as denominators.
+     * @see ExpandNumeratorTransformation
      */
     public static final Transformation ExpandNumerator = new Transformation() {
         @Override
@@ -77,6 +82,7 @@ class RedberryStatic {
 
     /**
      * Expands out products and powers that appear in the numerator.
+     * @see ExpandDenominatorTransformation
      */
     public static final Transformation ExpandDenominator = new Transformation() {
         @Override
@@ -87,6 +93,7 @@ class RedberryStatic {
 
     /**
      * Gives a partial derivative.
+     * @see DifferentiateTransformation
      */
     public static final StaticDifferentiate Differentiate = new StaticDifferentiate();
 
@@ -123,6 +130,7 @@ class RedberryStatic {
 
     /**
      * Eliminates metrics and Kronecker deltas
+     * @see EliminateMetricsTransformation
      */
     public static final Transformation EliminateMetrics = EliminateMetricsTransformation.ELIMINATE_METRICS
 
@@ -136,51 +144,61 @@ class RedberryStatic {
 
     /**
      * Gives the numerator of expression.
+     * @see GetNumeratorTransformation
      */
     public static final Transformation Numerator = GetNumeratorTransformation.GET_NUMERATOR
 
     /**
      * Gives the denominator of expression.
+     * @see GetDenominatorTransformation
      */
     public static final Transformation Denominator = GetDenominatorTransformation.GET_DENOMINATOR
 
     /**
      * Removes parts of expressions, which are zero because of the symmetries (symmetric and antisymmetric at the same time).
+     * @see EliminateFromSymmetriesTransformation
      */
     public static final Transformation EliminateFromSymmetries = EliminateFromSymmetriesTransformation.ELIMINATE_FROM_SYMMETRIES;
 
     /**
      * Puts terms in a sum over a common denominator, and cancels factors in the result.
+     * @see TogetherTransformation
      */
     public static final Transformation Together = TogetherTransformation.TOGETHER;
 
     /**
      * Puts terms in a sum over a common denominator, and cancels all symbolic factors in the result.
+     * @see TogetherTransformation
      */
     public static final Transformation TogetherFactor = TogetherTransformation.TOGETHER_FACTOR;
 
     /**
      * Replaces complex numbers in the expression to their complex conjugation.
+     * @see ComplexConjugateTransformation
      */
     public static final Transformation Conjugate = ComplexConjugateTransformation.COMPLEX_CONJUGATE;
 
     /**
      * Gives the numerical value of expression.
+     * @see ToNumericTransformation
      */
     public static final Transformation Numeric = ToNumericTransformation.TO_NUMERIC;
 
     /**
      * Collects similar scalar factors in products.
+     * @see CollectNonScalarsTransformation
      */
     public static final Transformation CollectScalars = CollectScalarFactorsTransformation.COLLECT_SCALAR_FACTORS
 
     /**
      * Puts terms in a sum together factoring out all scalars in each term.
+     * @see CollectNonScalarsTransformation
      */
     public static final Transformation CollectNonScalars = CollectNonScalarsTransformation.COLLECT_NON_SCALARS;
 
     /**
      * Factors a polynomial over the integers.
+     * @see FactorTransformation
      */
     public static final Transformation Factor = FactorTransformation.FACTOR;
 
@@ -189,10 +207,15 @@ class RedberryStatic {
         CC.current().getParseManager().defaultParserPreprocessors.add(indicesInsertion);
     }
 
-    /**
+    /*
      * Matrices definition
      */
 
+    /**
+     * Tells Redberry to consider specified tensors as matrices and use matrix multiplication rules
+     * @param objs input
+     * @see GeneralIndicesInsertion
+     */
     public static void defineMatrices(Object... objs) {
         def bufferOfTensors = [], bufferOfDescriptors = [];
         objs.each { obj ->
@@ -212,6 +235,11 @@ class RedberryStatic {
         //objs[0..<index].each { defineMatrices(it, * (objs[index..-1])) }
     }
 
+    /**
+     * Tells Redberry to consider specified tensor as matrix and use matrix multiplication rules
+     * @param tensor string representation of tensor (without matrix indices)
+     * @deprecated matrix descriptors
+     */
     public static void defineMatrix(String tensor, MatrixDescriptor... descriptors) {
         ParseTokenSimpleTensor token = CC.current().parseManager.parser.parse(tensor);
 
@@ -242,6 +270,11 @@ class RedberryStatic {
      * Utilities
      */
 
+    /**
+     * Evaluates closure, and returns a time in milliseconds used
+     * @param closure do stuff
+     * @return time spent in calculation
+     */
     public static long timing(Closure closure) {
         long start = System.currentTimeMillis();
         closure.call();
@@ -249,40 +282,4 @@ class RedberryStatic {
         println('Time: ' + (stop - start) + ' ms.')
         return (stop - start)
     }
-
-    /*
-     * Math opertaions
-     */
-
-    static Tensor sin(Tensor a) { Tensors.sin(a); }
-
-    static Tensor sin(Number a) { Tensors.sin(number2Complex(a)); }
-
-    static Tensor cos(Tensor a) { Tensors.cos(a); }
-
-    static Tensor cos(Number a) { Tensors.cos(number2Complex(a)); }
-
-    static Tensor tan(Tensor a) { Tensors.tan(a); }
-
-    static Tensor tan(Number a) { Tensors.tan(number2Complex(a)); }
-
-    static Tensor cot(Tensor a) { Tensors.cot(a); }
-
-    static Tensor cot(Number a) { Tensors.cot(number2Complex(a)); }
-
-    static Tensor arcsin(Tensor a) { Tensors.arcsin(a); }
-
-    static Tensor arcsin(Number a) { Tensors.arcsin(number2Complex(a)); }
-
-    static Tensor arccos(Tensor a) { Tensors.arccos(a); }
-
-    static Tensor arccos(Number a) { Tensors.arccos(number2Complex(a)); }
-
-    static Tensor arctan(Tensor a) { Tensors.arctan(a); }
-
-    static Tensor arctan(Number a) { Tensors.arctan(number2Complex(a)); }
-
-    static Tensor arccot(Tensor a) { Tensors.arccot(a); }
-
-    static Tensor arccot(Number a) { Tensors.arccot(number2Complex(a)); }
 }
