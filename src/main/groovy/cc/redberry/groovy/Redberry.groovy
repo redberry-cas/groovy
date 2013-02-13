@@ -556,6 +556,34 @@ class Redberry {
     }
 
     /**
+     * Applies collection of transformations to collection of expressions represented by
+     * {@link TransformationCollection}
+     *
+     * @param tensor tensor
+     * @param transformations collection of transformations
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     * @throws RuntimeException if {@code collection} is not a collection of expressions
+     */
+    static TransformationCollection rightShift(Transformation transformation, TransformationCollection collection) {
+        return new TransformationCollection(collection.transformations.collect { transformation.transform(it) })
+    }
+
+    /**
+     * Applies collection of transformations to collection of expressions represented by
+     * {@link TransformationCollection}
+     *
+     * @param tensor tensor
+     * @param transformations collection of transformations
+     * @return the result
+     * @see Transformation#transform(cc.redberry.core.tensor.Tensor)
+     * @throws RuntimeException if {@code collection} is not a collection of expressions
+     */
+    static TransformationCollection leftShift(TransformationCollection collection, Transformation transformation) {
+        return rightShift(transformation, collection)
+    }
+
+    /**
      * Applies transformation to tensor
      * @param tensor tensor
      * @param transformation transformation
